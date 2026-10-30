@@ -10,7 +10,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 
 | Sprint | Title | Maps to architecture phase | Status |
 | :-- | :-- | :-- | :-- |
-| 0 | Foundation & Tooling | Phase 1 (partial) | ⬜ Not started |
+| 0 | Foundation & Tooling | Phase 1 (partial) | ✅ Done |
 | 1 | Data Layer (SQLite + Migrations) | Phase 1 | ⬜ Not started |
 | 2 | Ollama Orchestration & Bake-Off Panel | Phase 2 | ⬜ Not started |
 | 3 | Socratic Math Module MVP | Phase 3 | ⬜ Not started |
@@ -36,7 +36,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 **Goal:** A runnable Electron + React + TypeScript shell with the full dev/test toolchain wired, so every later sprint starts from a verified baseline.
 
 **Scope & plan:**
-- Scaffold repo: Electron, React 18, TypeScript (strict), Vite, TailwindCSS, `better-sqlite3` dependency.
+- Scaffold repo: Electron, React 19, TypeScript (strict), Vite 8 (via `electron-vite`), TailwindCSS 4, `better-sqlite3` dependency (Electron-ABI verified).
 - Set up Vitest (unit + integration), ESLint + Prettier, `npm run dev / test / typecheck / lint / build` scripts.
 - Create directory skeleton per architecture.md §4: `src/main`, `src/renderer` (`/components`, `/views`, `/hooks`), `src/shared`, `content-library/*`, `tests/`.
 - Add `.gitignore` (node_modules, build output, root `*.pdf` test assets, local DB files).

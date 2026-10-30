@@ -3,6 +3,7 @@ import { buildDbStatus } from '@main/db/dbStatus';
 import { openDatabase } from '@main/db/database';
 import { createFlashcardsRepo } from '@main/db/repositories/flashcardsRepo';
 import { handlePing, registerIpcHandlers, type IpcServices } from '@main/ipcHandlers';
+import type { AiGenerateRequest, AiResult, AiStatusResponse } from '@shared/ai-types';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 
 describe('handlePing', () => {
@@ -22,22 +23,40 @@ describe('handlePing', () => {
 
 describe('registerIpcHandlers', () => {
   const noopServices: IpcServices = {
-    dbStatus: () => ({ migrationVersion: 1, tableCounts: {}, totalRows: 0 })
+    dbStatus: () => ({ migrationVersion: 2, tableCounts: {}, totalRows: 0 }),
+    aiStatus: async () => ({ engine: 'qwen2.5:7b', models: [], ollamaAvailable: false }),
+    aiSetEngine: async (model: string) => ({ engine: model }),
+    aiGenerate: async (_request: AiGenerateRequest): Promise<AiResult> => ({
+      ok: false,
+      failure: { kind: 'unreachable', message: 'not wired in this test' }
+    })
   };
 
-  it('registers exactly one handler per contract channel', () => {
+  const capture = (): Map<string, unknown> => {
+    const handlers = new Map<string, unknown>();
+    registerIpcHandlers(
+      { handle: (channel, handler) => void handlers.set(channel, handler) },
+      noopServices
+    );
+    return handlers;
+  };
+
+  it('registers exactly one handler per contract channel, in order', () => {
     const registrar = { handle: vi.fn() };
     registerIpcHandlers(registrar, noopServices);
 
     const channels = registrar.handle.mock.calls.map((call) => call[0]);
-    expect(channels).toEqual([IPC_CHANNELS.ping, IPC_CHANNELS.dbStatus]);
+    expect(channels).toEqual([
+      IPC_CHANNELS.ping,
+      IPC_CHANNELS.dbStatus,
+      IPC_CHANNELS.aiStatus,
+      IPC_CHANNELS.aiSetEngine,
+      IPC_CHANNELS.aiGenerate
+    ]);
   });
 
   it('wires the ping handler to the pure logic', () => {
-    const handlers = new Map<string, unknown>();
-    registerIpcHandlers({ handle: (channel, handler) => void handlers.set(channel, handler) }, noopServices);
-
-    const pingHandler = handlers.get(IPC_CHANNELS.ping) as (
+    const pingHandler = capture().get(IPC_CHANNELS.ping) as (
       event: unknown,
       request: { payload: string }
     ) => unknown;
@@ -52,15 +71,69 @@ describe('registerIpcHandlers', () => {
     createFlashcardsRepo(db).create({ deckName: 'd', frontPrompt: 'f', backAnswer: 'b' });
 
     const handlers = new Map<string, unknown>();
-    registerIpcHandlers({ handle: (channel, handler) => void handlers.set(channel, handler) }, {
-      dbStatus: () => buildDbStatus(db)
-    });
+    registerIpcHandlers(
+      { handle: (channel, handler) => void handlers.set(channel, handler) },
+      { ...noopServices, dbStatus: () => buildDbStatus(db) }
+    );
 
     const dbStatusHandler = handlers.get(IPC_CHANNELS.dbStatus) as () => unknown;
     expect(dbStatusHandler()).toEqual({
-      migrationVersion: 1,
-      tableCounts: { flashcards: 1, user_progress: 0, content_pool: 0, interactive_prompts: 0, book_episodes: 0, user_reading_streaks: 0 },
+      migrationVersion: 2,
+      tableCounts: {
+        flashcards: 1,
+        user_progress: 0,
+        content_pool: 0,
+        interactive_prompts: 0,
+        book_episodes: 0,
+        user_reading_streaks: 0
+      },
       totalRows: 1
     });
+  });
+
+  it('delegates ai channels to the engine service', async () => {
+    const aiStatus = vi.fn(async (): Promise<AiStatusResponse> => ({
+      engine: 'llama3.1:8b',
+      models: ['llama3.1:8b'],
+      ollamaAvailable: true
+    }));
+    const aiSetEngine = vi.fn(async (model: string) => ({ engine: model }));
+    const aiGenerate = vi.fn(async (): Promise<AiResult> => ({
+      ok: true,
+      result: {
+        text: 'hi',
+        model: 'qwen2.5:7b',
+        metrics: { latencyMs: 5, promptTokens: 1, completionTokens: 1, tokensPerSecond: 200 }
+      }
+    }));
+
+    const handlers = new Map<string, unknown>();
+    registerIpcHandlers(
+      { handle: (channel, handler) => void handlers.set(channel, handler) },
+      { ...noopServices, aiStatus, aiSetEngine, aiGenerate }
+    );
+
+    const statusHandler = handlers.get(IPC_CHANNELS.aiStatus) as () => Promise<AiStatusResponse>;
+    await expect(statusHandler()).resolves.toEqual({
+      engine: 'llama3.1:8b',
+      models: ['llama3.1:8b'],
+      ollamaAvailable: true
+    });
+
+    const setEngineHandler = handlers.get(IPC_CHANNELS.aiSetEngine) as (
+      event: unknown,
+      model: string
+    ) => Promise<{ engine: string }>;
+    await expect(setEngineHandler({}, 'm2')).resolves.toEqual({ engine: 'm2' });
+    expect(aiSetEngine).toHaveBeenCalledWith('m2');
+
+    const generateHandler = handlers.get(IPC_CHANNELS.aiGenerate) as (
+      event: unknown,
+      request: AiGenerateRequest
+    ) => Promise<AiResult>;
+    const request: AiGenerateRequest = { model: 'qwen2.5:7b', prompt: 'p' };
+    const outcome = await generateHandler({}, request);
+    expect(outcome.ok).toBe(true);
+    expect(aiGenerate).toHaveBeenCalledWith(request);
   });
 });

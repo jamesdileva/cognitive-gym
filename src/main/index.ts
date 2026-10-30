@@ -4,6 +4,8 @@ import { buildDbStatus } from './db/dbStatus';
 import { openDatabase } from './db/database';
 import { seedDevDataIfEmpty } from './db/seedDevData';
 import { registerIpcHandlers } from './ipcHandlers';
+import { createAiEngineService } from './ollama/engine';
+import { OllamaClient, toAiResult } from './ollama/ollamaClient';
 
 const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
@@ -50,8 +52,12 @@ app.whenReady().then(() => {
     seedDevDataIfEmpty(db);
   }
 
+  const ai = createAiEngineService(db, new OllamaClient());
   registerIpcHandlers(ipcMain, {
-    dbStatus: () => buildDbStatus(db)
+    dbStatus: () => buildDbStatus(db),
+    aiStatus: () => ai.status(),
+    aiSetEngine: async (model: string) => ai.setEngine(model),
+    aiGenerate: (request) => toAiResult(ai.generateWithEngine(request))
   });
 
   createWindow();

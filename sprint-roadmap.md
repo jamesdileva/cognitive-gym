@@ -12,7 +12,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | :-- | :-- | :-- | :-- |
 | 0 | Foundation & Tooling | Phase 1 (partial) | ✅ Done |
 | 1 | Data Layer (SQLite + Migrations) | Phase 1 | ✅ Done |
-| 2 | Ollama Orchestration & Bake-Off Panel | Phase 2 | ⬜ Not started |
+| 2 | Ollama Orchestration & Bake-Off Panel | Phase 2 | ✅ Done |
 | 3 | Socratic Math Module MVP | Phase 3 | ⬜ Not started |
 | 4 | Flashcards & Leitner Spaced Repetition | Phase 4 | ⬜ Not started |
 | 5 | Ingestion Pipeline v1 (PDF → DB) | Phase 3 | ⬜ Not started |
@@ -63,8 +63,8 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 **Goal:** One wrapper for all AI calls with live engine switching, plus the developer bake-off UI.
 
 **Scope & plan:**
-- `OllamaClient` in `src/main/ollama/`: health check, model list, `generate`/`chat` (streaming), latency + tokens/sec metrics.
-- Engine setting (Qwen 2.5 7B ⇄ Llama 3.1 8B) persisted in DB, switchable at runtime — never hardcoded.
+- `OllamaClient` in `src/main/ollama/`: health check, model list, `generate`/`chat` (non-streaming; streaming deferred to Sprint 7's chat UI), latency + tokens/sec metrics, typed failure kinds.
+- Engine setting (Qwen 2.5 7B ⇄ Llama 3.1 8B) persisted in DB (`app_settings`, migration v2), switchable at runtime — never hardcoded.
 - **Prompt registry** (`src/shared/prompts/`): Socratic Math/Logic template, Code Diagnostics template, Literary Compressor & Evaluator, Socratic Hint Tree Builder, Episodic Chunker — verbatim from the docs.
 - Bake-Off Tester Panel view: same prompt → both models side-by-side, latency/token metrics, tone comparison.
 

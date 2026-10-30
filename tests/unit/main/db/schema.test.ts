@@ -7,7 +7,8 @@ const EXPECTED_TABLES = [
   'content_pool',
   'interactive_prompts',
   'book_episodes',
-  'user_reading_streaks'
+  'user_reading_streaks',
+  'app_settings'
 ];
 
 describe('openDatabase', () => {
@@ -30,6 +31,6 @@ describe('openDatabase', () => {
     const db = openDatabase(':memory:');
     expect(db.pragma('journal_mode', { simple: true })).toBe('memory'); // WAL is a no-op in memory
     const row = db.prepare('SELECT MAX(version) AS v FROM _migrations').get() as { v: number };
-    expect(row.v).toBe(1);
+    expect(row.v).toBe(2);
   });
 });

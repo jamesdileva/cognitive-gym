@@ -11,7 +11,7 @@ describe('buildDbStatus', () => {
     createUserProgressRepo(db).recordAttempt({ moduleType: 'math', contentItemId: 'x', successful: true });
 
     const status = buildDbStatus(db);
-    expect(status.migrationVersion).toBe(1);
+    expect(status.migrationVersion).toBe(2);
     expect(status.tableCounts['flashcards']).toBe(1);
     expect(status.tableCounts['user_progress']).toBe(1);
     expect(status.tableCounts['content_pool']).toBe(0);

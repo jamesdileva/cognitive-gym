@@ -31,7 +31,7 @@ export default function HomeView(): JSX.Element {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 text-zinc-100">
       <h1 className="text-4xl font-bold tracking-tight">Cognitive Gym</h1>
-      <p className="text-zinc-400">Local-first AI tutoring · sprint 1 shell</p>
+      <p className="text-zinc-400">Local-first AI tutoring</p>
       <div className="flex gap-3">
         <StatusBadge label="IPC bridge" status={ping.status} detail={ping.detail} />
         <StatusBadge

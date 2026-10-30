@@ -1,3 +1,4 @@
+import type { AiGenerateRequest, AiResult, AiStatusResponse } from './ai-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -8,4 +9,7 @@ import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 export interface GymApi {
   ping(request: PingRequest): Promise<PingResponse>;
   dbStatus(): Promise<DbStatusResponse>;
+  aiStatus(): Promise<AiStatusResponse>;
+  aiSetEngine(model: string): Promise<{ engine: string }>;
+  aiGenerate(request: AiGenerateRequest): Promise<AiResult>;
 }

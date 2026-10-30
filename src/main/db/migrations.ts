@@ -89,5 +89,16 @@ export const MIGRATIONS: Migration[] = [
         last_read_date TIMESTAMP
       );
     `
+  },
+  {
+    version: 2,
+    name: 'app-settings',
+    up: `
+      CREATE TABLE app_settings (
+        key TEXT NOT NULL PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `
   }
 ];

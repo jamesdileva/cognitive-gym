@@ -9,7 +9,13 @@ export const IPC_CHANNELS = {
   /** Round-trip health check for the Electron process bridge. */
   ping: 'system:ping',
   /** Database health snapshot (schema version + row counts). */
-  dbStatus: 'db:status'
+  dbStatus: 'db:status',
+  /** Ollama engine + installed models + availability. */
+  aiStatus: 'ai:status',
+  /** Persist the engine model selection. */
+  aiSetEngine: 'ai:set-engine',
+  /** Run one non-streaming generation against a named model. */
+  aiGenerate: 'ai:generate'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

@@ -1,4 +1,4 @@
-import type { PingRequest, PingResponse } from './ipc-types';
+import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
  * The complete surface the preload script exposes to the renderer as `window.api`.
@@ -7,4 +7,5 @@ import type { PingRequest, PingResponse } from './ipc-types';
  */
 export interface GymApi {
   ping(request: PingRequest): Promise<PingResponse>;
+  dbStatus(): Promise<DbStatusResponse>;
 }

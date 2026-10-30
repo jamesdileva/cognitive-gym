@@ -7,7 +7,8 @@ import { IPC_CHANNELS, type PingRequest } from '@shared/ipc-types';
  * The `GymApi` annotation makes a contract mismatch a compile error here.
  */
 const api: GymApi = {
-  ping: (request: PingRequest) => ipcRenderer.invoke(IPC_CHANNELS.ping, request)
+  ping: (request: PingRequest) => ipcRenderer.invoke(IPC_CHANNELS.ping, request),
+  dbStatus: () => ipcRenderer.invoke(IPC_CHANNELS.dbStatus)
 };
 
 contextBridge.exposeInMainWorld('api', api);

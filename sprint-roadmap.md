@@ -11,7 +11,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | Sprint | Title | Maps to architecture phase | Status |
 | :-- | :-- | :-- | :-- |
 | 0 | Foundation & Tooling | Phase 1 (partial) | ✅ Done |
-| 1 | Data Layer (SQLite + Migrations) | Phase 1 | ⬜ Not started |
+| 1 | Data Layer (SQLite + Migrations) | Phase 1 | ✅ Done |
 | 2 | Ollama Orchestration & Bake-Off Panel | Phase 2 | ⬜ Not started |
 | 3 | Socratic Math Module MVP | Phase 3 | ⬜ Not started |
 | 4 | Flashcards & Leitner Spaced Repetition | Phase 4 | ⬜ Not started |

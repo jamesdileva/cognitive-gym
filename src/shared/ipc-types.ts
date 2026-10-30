@@ -7,7 +7,9 @@
 
 export const IPC_CHANNELS = {
   /** Round-trip health check for the Electron process bridge. */
-  ping: 'system:ping'
+  ping: 'system:ping',
+  /** Database health snapshot (schema version + row counts). */
+  dbStatus: 'db:status'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
@@ -24,4 +26,14 @@ export interface PingResponse {
   echo: string;
   /** Main-process clock (ms) at handling time. */
   receivedAtMs: number;
+}
+
+/** Response payload for {@link IPC_CHANNELS.dbStatus}. */
+export interface DbStatusResponse {
+  /** Highest applied schema version (0 = no migrations applied). */
+  migrationVersion: number;
+  /** Row count per tracked table. */
+  tableCounts: Record<string, number>;
+  /** Sum of all tracked row counts. */
+  totalRows: number;
 }

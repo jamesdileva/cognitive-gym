@@ -1,0 +1,4 @@
+# Local test assets — personal fixtures, never commit (see AGENTS.md §6)
+/*.pdf
+
+# Later sprints will extend this (node_modules, dist, local DB files, etc.)

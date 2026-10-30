@@ -1,6 +1,11 @@
 import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
 import { join } from 'node:path';
+import { buildDbStatus } from './db/dbStatus';
+import { openDatabase } from './db/database';
+import { seedDevDataIfEmpty } from './db/seedDevData';
 import { registerIpcHandlers } from './ipcHandlers';
+
+const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -24,9 +29,9 @@ function createWindow(): BrowserWindow {
     return { action: 'deny' };
   });
 
-  if (process.env['ELECTRON_RENDERER_URL']) {
+  if (isDev()) {
     // Dev server (HMR) provided by electron-vite.
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] as string);
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
@@ -36,11 +41,19 @@ function createWindow(): BrowserWindow {
 
 app.whenReady().then(() => {
   // Keep the stock menu in dev (devtools access); drop it in packaged builds.
-  if (!process.env['ELECTRON_RENDERER_URL']) {
+  if (!isDev()) {
     Menu.setApplicationMenu(null);
   }
 
-  registerIpcHandlers(ipcMain);
+  const db = openDatabase(join(app.getPath('userData'), 'cognitive-gym.db'));
+  if (isDev()) {
+    seedDevDataIfEmpty(db);
+  }
+
+  registerIpcHandlers(ipcMain, {
+    dbStatus: () => buildDbStatus(db)
+  });
+
   createWindow();
 
   app.on('activate', () => {

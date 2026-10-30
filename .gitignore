@@ -1,4 +1,29 @@
 # Local test assets — personal fixtures, never commit (see AGENTS.md §6)
 /*.pdf
 
-# Later sprints will extend this (node_modules, dist, local DB files, etc.)
+# Dependencies
+node_modules/
+
+# Build output
+out/
+dist/
+release/
+
+# Test artifacts
+coverage/
+
+# Local databases (ingested book content lives here, never in the repo)
+*.sqlite
+*.sqlite3
+*.db
+
+# Logs & OS cruft
+*.log
+.DS_Store
+Thumbs.db
+
+# Environment & editor
+.env
+.env.*
+.idea/
+.vscode/

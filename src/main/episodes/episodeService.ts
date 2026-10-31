@@ -55,7 +55,20 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
       });
     },
 
-    getDailyFeed(bookTitle: string): DailyFeed {
+    /** Titles + numbers for the revisit browser (no episode text). */
+    listEpisodeSummaries(bookTitle: string): { episodeNumber: number; episodeTitle: string }[] {
+      return deps.bookEpisodes.listEpisodes(bookTitle).map((episode) => ({
+        episodeNumber: episode.episode_number,
+        episodeTitle: episode.episode_title ?? `Episode ${episode.episode_number}`
+      }));
+    },
+
+    /**
+     * The feed entry for a track. Without `episodeNumber` this is the daily
+     * gated episode; with one, it is a read-only revisit of that specific
+     * episode — the streak is never advanced by revisiting.
+     */
+    getDailyFeed(bookTitle: string, episodeNumber?: number): DailyFeed {
       const isCanonical = deps.bookEpisodes.bookTrack(bookTitle) ?? true;
       const episodes = deps.bookEpisodes.listEpisodes(bookTitle);
       const feed = buildFeed(
@@ -65,14 +78,37 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
       );
       const streak = deps.streaks.ensure(bookTitle);
 
-      const episodeNumber = nextEpisodeInFeed(feed, streak.current_episode);
-      const row = episodeNumber === null ? undefined : deps.bookEpisodes.getEpisode(bookTitle, episodeNumber);
+      if (episodeNumber !== undefined) {
+        const row = deps.bookEpisodes.getEpisode(bookTitle, episodeNumber);
+        return {
+          bookTitle,
+          isCanonical,
+          position: Math.max(1, feed.indexOf(episodeNumber) + 1),
+          total: feed.length,
+          revisit: true,
+          episode:
+            row === undefined
+              ? null
+              : {
+                  episodeNumber: row.episode_number,
+                  episodeTitle: row.episode_title ?? `Episode ${row.episode_number}`,
+                  recap: row.episodeRecap ?? '',
+                  text: row.content_text,
+                  contentUuid: row.contentUuid
+                }
+        };
+      }
+
+      const dailyNumber = nextEpisodeInFeed(feed, streak.current_episode);
+      const row =
+        dailyNumber === null ? undefined : deps.bookEpisodes.getEpisode(bookTitle, dailyNumber);
 
       return {
         bookTitle,
         isCanonical,
         position: Math.min(streak.current_episode, feed.length),
         total: feed.length,
+        revisit: false,
         episode:
           row === undefined
             ? null

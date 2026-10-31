@@ -54,6 +54,8 @@ export const IPC_CHANNELS = {
   epFinish: 'ep:finish',
   /** Episodes: comprehension questions linked to an episode. */
   epQuestions: 'ep:questions',
+  /** Episodes: revisit browser list (titles only). */
+  epList: 'ep:list',
   /** Reading Room: passage list with question counts. */
   readPassages: 'read:passages',
   /** Reading Room: open a passage session (criteria stay main-side). */

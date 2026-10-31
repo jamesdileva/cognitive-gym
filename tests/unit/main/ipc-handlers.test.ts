@@ -10,6 +10,7 @@ import type { IngestionReport, IngestedSourceSummary } from '@shared/ingestion-t
 import type {
   DailyFeed,
   EpisodeQuestion,
+  EpisodeSummary,
   EpisodeTrack,
   EpisodicIngestReport,
   EpisodicIngestRequest
@@ -80,6 +81,7 @@ describe('registerIpcHandlers', () => {
     epFeed: () => ({ feed: {} as DailyFeed }),
     epFinish: () => ({ nextEpisodeNumber: null }),
     epQuestions: () => ({ questions: [] as EpisodeQuestion[] }),
+    epList: () => ({ episodes: [] as EpisodeSummary[] }),
     readPassages: () => ({ passages: [] as ReadingPassageSummary[] }),
     readStart: () => ({ session: {} as ReadingSession }),
     readSubmit: async (): Promise<GradeResult> => ({ ok: true, score: 90, feedback: 'good' })
@@ -121,6 +123,7 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.epIngest,
       IPC_CHANNELS.epTracks,
       IPC_CHANNELS.epFeed,
+      IPC_CHANNELS.epList,
       IPC_CHANNELS.epFinish,
       IPC_CHANNELS.epQuestions,
       IPC_CHANNELS.readPassages,

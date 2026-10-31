@@ -15,6 +15,7 @@ import type {
 import type {
   DailyFeed,
   EpisodeQuestion,
+  EpisodeSummary,
   EpisodeTrack,
   EpisodicIngestReport,
   EpisodicIngestRequest
@@ -54,9 +55,11 @@ export interface GymApi {
   onIngestProgress(callback: (progress: IngestProgress) => void): () => void;
   epIngest(request: EpisodicIngestRequest): Promise<EpisodicIngestReport>;
   epTracks(): Promise<{ tracks: EpisodeTrack[] }>;
-  epFeed(request: { bookTitle: string }): Promise<{ feed: DailyFeed }>;
+  /** Without episodeNumber: today's gated episode. With one: a read-only revisit. */
+  epFeed(request: { bookTitle: string; episodeNumber?: number }): Promise<{ feed: DailyFeed }>;
   epFinish(request: { bookTitle: string }): Promise<{ nextEpisodeNumber: number | null }>;
   epQuestions(request: { contentUuid: string }): Promise<{ questions: EpisodeQuestion[] }>;
+  epList(request: { bookTitle: string }): Promise<{ episodes: EpisodeSummary[] }>;
   readPassages(): Promise<{ passages: ReadingPassageSummary[] }>;
   readStart(request: { uuid: string }): Promise<{ session: ReadingSession }>;
   readSubmit(request: {

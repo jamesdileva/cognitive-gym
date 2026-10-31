@@ -20,6 +20,11 @@ export interface EpisodeView {
   contentUuid: string | null;
 }
 
+export interface EpisodeSummary {
+  episodeNumber: number;
+  episodeTitle: string;
+}
+
 export interface DailyFeed {
   bookTitle: string;
   isCanonical: boolean;
@@ -28,6 +33,8 @@ export interface DailyFeed {
   total: number;
   /** Null when the track is finished. */
   episode: EpisodeView | null;
+  /** True when viewing a specific past/future episode rather than the daily one. */
+  revisit: boolean;
 }
 
 export interface EpisodeQuestion {

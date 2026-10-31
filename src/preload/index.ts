@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { GymApi } from '@shared/api-contract';
 import type { AiGenerateRequest } from '@shared/ai-types';
 import type { IngestProgress } from '@shared/ingestion-types';
+import type { EpisodicIngestRequest } from '@shared/episodes-types';
 import type { MathProblem } from '@shared/math-types';
 import { IPC_CHANNELS, type PingRequest } from '@shared/ipc-types';
 
@@ -41,7 +42,13 @@ const api: GymApi = {
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.ingestProgress, listener);
     };
-  }
+  },
+  epIngest: (request: EpisodicIngestRequest) => ipcRenderer.invoke(IPC_CHANNELS.epIngest, request),
+  epTracks: () => ipcRenderer.invoke(IPC_CHANNELS.epTracks),
+  epFeed: (request: { bookTitle: string }) => ipcRenderer.invoke(IPC_CHANNELS.epFeed, request),
+  epFinish: (request: { bookTitle: string }) => ipcRenderer.invoke(IPC_CHANNELS.epFinish, request),
+  epQuestions: (request: { contentUuid: string }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.epQuestions, request)
 };
 
 contextBridge.exposeInMainWorld('api', api);

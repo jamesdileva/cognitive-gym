@@ -7,6 +7,13 @@ import type { AiGenerateRequest, AiResult, AiStatusResponse } from '@shared/ai-t
 import type { MathHintResult, MathProblem, MathTopicSummary } from '@shared/math-types';
 import type { DeckSummary } from '@shared/srs-types';
 import type { IngestionReport, IngestedSourceSummary } from '@shared/ingestion-types';
+import type {
+  DailyFeed,
+  EpisodeQuestion,
+  EpisodeTrack,
+  EpisodicIngestReport,
+  EpisodicIngestRequest
+} from '@shared/episodes-types';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 
 describe('handlePing', () => {
@@ -33,7 +40,7 @@ describe('registerIpcHandlers', () => {
   };
 
   const noopServices: IpcServices = {
-    dbStatus: () => ({ migrationVersion: 2, tableCounts: {}, totalRows: 0 }),
+    dbStatus: () => ({ migrationVersion: 3, tableCounts: {}, totalRows: 0 }),
     aiStatus: async () => ({ engine: 'qwen2.5:7b', models: [], ollamaAvailable: false }),
     aiSetEngine: async (model: string) => ({ engine: model }),
     aiGenerate: async (_request: AiGenerateRequest): Promise<AiResult> => ({
@@ -59,7 +66,19 @@ describe('registerIpcHandlers', () => {
       failures: []
     }),
     ingestLibrary: () => ({ sources: [] as IngestedSourceSummary[] }),
-    ingestDelete: () => ({ deleted: false })
+    ingestDelete: () => ({ deleted: false }),
+    epIngest: async (_request: EpisodicIngestRequest): Promise<EpisodicIngestReport> => ({
+      title: 'x',
+      kind: 'txt',
+      chunkCount: 0,
+      ingestedCount: 0,
+      questionCount: 0,
+      failures: []
+    }),
+    epTracks: () => ({ tracks: [] as EpisodeTrack[] }),
+    epFeed: () => ({ feed: {} as DailyFeed }),
+    epFinish: () => ({ nextEpisodeNumber: null }),
+    epQuestions: () => ({ questions: [] as EpisodeQuestion[] })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -94,7 +113,12 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.ingestSelectFile,
       IPC_CHANNELS.ingestRun,
       IPC_CHANNELS.ingestLibrary,
-      IPC_CHANNELS.ingestDelete
+      IPC_CHANNELS.ingestDelete,
+      IPC_CHANNELS.epIngest,
+      IPC_CHANNELS.epTracks,
+      IPC_CHANNELS.epFeed,
+      IPC_CHANNELS.epFinish,
+      IPC_CHANNELS.epQuestions
     ]);
   });
 
@@ -121,7 +145,7 @@ describe('registerIpcHandlers', () => {
 
     const dbStatusHandler = handlers.get(IPC_CHANNELS.dbStatus) as () => unknown;
     expect(dbStatusHandler()).toEqual({
-      migrationVersion: 2,
+      migrationVersion: 3,
       tableCounts: {
         flashcards: 1,
         user_progress: 0,

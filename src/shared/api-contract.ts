@@ -12,6 +12,13 @@ import type {
   IngestionReport,
   IngestedSourceSummary
 } from './ingestion-types';
+import type {
+  DailyFeed,
+  EpisodeQuestion,
+  EpisodeTrack,
+  EpisodicIngestReport,
+  EpisodicIngestRequest
+} from './episodes-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -40,4 +47,9 @@ export interface GymApi {
   ingestDelete(request: { sourceTitle: string }): Promise<{ deleted: boolean }>;
   /** Subscribes to main→renderer progress events; returns an unsubscribe fn. */
   onIngestProgress(callback: (progress: IngestProgress) => void): () => void;
+  epIngest(request: EpisodicIngestRequest): Promise<EpisodicIngestReport>;
+  epTracks(): Promise<{ tracks: EpisodeTrack[] }>;
+  epFeed(request: { bookTitle: string }): Promise<{ feed: DailyFeed }>;
+  epFinish(request: { bookTitle: string }): Promise<{ nextEpisodeNumber: number | null }>;
+  epQuestions(request: { contentUuid: string }): Promise<{ questions: EpisodeQuestion[] }>;
 }

@@ -31,6 +31,6 @@ describe('openDatabase', () => {
     const db = openDatabase(':memory:');
     expect(db.pragma('journal_mode', { simple: true })).toBe('memory'); // WAL is a no-op in memory
     const row = db.prepare('SELECT MAX(version) AS v FROM _migrations').get() as { v: number };
-    expect(row.v).toBe(2);
+    expect(row.v).toBe(3);
   });
 });

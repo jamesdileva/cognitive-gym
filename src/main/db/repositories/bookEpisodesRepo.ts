@@ -8,6 +8,10 @@ export interface BookEpisodeRow {
   content_text: string;
   /** true = serialized track (locked order), false = anthology (shufflable). */
   isCanonical: boolean;
+  /** 1-sentence "previously on" (canonical) or premise hook (anthology). */
+  episodeRecap: string | null;
+  /** Linked comprehension questions in content_pool (null when distill failed). */
+  contentUuid: string | null;
 }
 
 export interface InsertEpisodeInput {
@@ -15,6 +19,8 @@ export interface InsertEpisodeInput {
   episodeTitle?: string;
   contentText: string;
   isCanonical: boolean;
+  episodeRecap?: string;
+  contentUuid?: string;
 }
 
 /**
@@ -30,15 +36,20 @@ export function createBookEpisodesRepo(db: GymDatabase) {
         for (const episode of episodes) {
           db.prepare(
             `
-            INSERT INTO book_episodes (book_title, episode_number, episode_title, content_text, is_canonical)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO book_episodes (
+              book_title, episode_number, episode_title, content_text, is_canonical,
+              episode_recap, content_uuid
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             `
           ).run(
             bookTitle,
             episode.episodeNumber,
             episode.episodeTitle ?? null,
             episode.contentText,
-            episode.isCanonical ? 1 : 0
+            episode.isCanonical ? 1 : 0,
+            episode.episodeRecap ?? null,
+            episode.contentUuid ?? null
           );
         }
       });
@@ -57,26 +68,61 @@ export function createBookEpisodesRepo(db: GymDatabase) {
         .all() as { book_title: string; episode_count: number }[];
     },
 
-    /** Episodes in canonical order — the reader engine decides pacing/shuffling. */
+    /** A book's track type is decided at ingest time and shared by all episodes. */
+    bookTrack(bookTitle: string): boolean | null {
+      const row = db
+        .prepare('SELECT is_canonical FROM book_episodes WHERE book_title = ? LIMIT 1')
+        .get(bookTitle) as { is_canonical: number } | undefined;
+      return row === undefined ? null : row.is_canonical === 1;
+    },
+
+    /** Episodes in canonical order — the feed engine decides pacing/shuffling. */
     listEpisodes(bookTitle: string): BookEpisodeRow[] {
       const rows = db
-        .prepare(
-          'SELECT * FROM book_episodes WHERE book_title = ? ORDER BY episode_number'
-        )
-        .all(bookTitle) as (Omit<BookEpisodeRow, 'isCanonical'> & { is_canonical: number })[];
-      return rows.map((row) => ({
-        id: row.id,
-        book_title: row.book_title,
-        episode_number: row.episode_number,
-        episode_title: row.episode_title,
-        content_text: row.content_text,
-        isCanonical: row.is_canonical === 1
-      }));
+        .prepare('SELECT * FROM book_episodes WHERE book_title = ? ORDER BY episode_number')
+        .all(bookTitle) as (Omit<BookEpisodeRow, 'isCanonical' | 'episodeRecap' | 'contentUuid'> & {
+        is_canonical: number;
+        episode_recap: string | null;
+        content_uuid: string | null;
+      })[];
+      return rows.map(mapRow);
+    },
+
+    getEpisode(bookTitle: string, episodeNumber: number): BookEpisodeRow | undefined {
+      const row = db
+        .prepare('SELECT * FROM book_episodes WHERE book_title = ? AND episode_number = ?')
+        .get(bookTitle, episodeNumber) as
+        | (Omit<BookEpisodeRow, 'isCanonical' | 'episodeRecap' | 'contentUuid'> & {
+            is_canonical: number;
+            episode_recap: string | null;
+            content_uuid: string | null;
+          })
+        | undefined;
+      return row === undefined ? undefined : mapRow(row);
     },
 
     deleteBook(bookTitle: string): boolean {
       return db.prepare('DELETE FROM book_episodes WHERE book_title = ?').run(bookTitle).changes > 0;
     }
+  };
+}
+
+type RawEpisodeRow = Omit<BookEpisodeRow, 'isCanonical' | 'episodeRecap' | 'contentUuid'> & {
+  is_canonical: number;
+  episode_recap: string | null;
+  content_uuid: string | null;
+};
+
+function mapRow(row: RawEpisodeRow): BookEpisodeRow {
+  return {
+    id: row.id,
+    book_title: row.book_title,
+    episode_number: row.episode_number,
+    episode_title: row.episode_title,
+    content_text: row.content_text,
+    isCanonical: row.is_canonical === 1,
+    episodeRecap: row.episode_recap,
+    contentUuid: row.content_uuid
   };
 }
 

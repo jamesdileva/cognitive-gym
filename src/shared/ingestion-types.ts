@@ -3,7 +3,7 @@
 export type BookKind = 'pdf' | 'epub' | 'txt';
 
 export interface IngestProgress {
-  stage: 'extracting' | 'distilling';
+  stage: 'extracting' | 'distilling' | 'episodes' | 'questions';
   current: number;
   total: number;
 }

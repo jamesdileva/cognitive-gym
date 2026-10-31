@@ -6,6 +6,7 @@ import { handlePing, registerIpcHandlers, type IpcServices } from '@main/ipcHand
 import type { AiGenerateRequest, AiResult, AiStatusResponse } from '@shared/ai-types';
 import type { MathHintResult, MathProblem, MathTopicSummary } from '@shared/math-types';
 import type { DeckSummary } from '@shared/srs-types';
+import type { IngestionReport, IngestedSourceSummary } from '@shared/ingestion-types';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 
 describe('handlePing', () => {
@@ -47,7 +48,18 @@ describe('registerIpcHandlers', () => {
     srsDecks: () => ({ decks: [] as DeckSummary[] }),
     srsDraw: () => ({ card: null }),
     srsReveal: () => ({ back: '' }),
-    srsGrade: () => ({ back: '', box: 1, nextDueDays: 1 })
+    srsGrade: () => ({ back: '', box: 1, nextDueDays: 1 }),
+    ingestSelectFile: async () => ({ path: null }),
+    ingestRun: async (): Promise<IngestionReport> => ({
+      title: 'x',
+      kind: 'txt',
+      chunkCount: 0,
+      ingestedCount: 0,
+      questionCount: 0,
+      failures: []
+    }),
+    ingestLibrary: () => ({ sources: [] as IngestedSourceSummary[] }),
+    ingestDelete: () => ({ deleted: false })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -78,7 +90,11 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.srsDecks,
       IPC_CHANNELS.srsDraw,
       IPC_CHANNELS.srsReveal,
-      IPC_CHANNELS.srsGrade
+      IPC_CHANNELS.srsGrade,
+      IPC_CHANNELS.ingestSelectFile,
+      IPC_CHANNELS.ingestRun,
+      IPC_CHANNELS.ingestLibrary,
+      IPC_CHANNELS.ingestDelete
     ]);
   });
 

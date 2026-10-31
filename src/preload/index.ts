@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { GymApi } from '@shared/api-contract';
 import type { AiGenerateRequest } from '@shared/ai-types';
+import type { IngestProgress } from '@shared/ingestion-types';
 import type { MathProblem } from '@shared/math-types';
 import { IPC_CHANNELS, type PingRequest } from '@shared/ipc-types';
 
@@ -27,7 +28,20 @@ const api: GymApi = {
   srsDraw: (request: { deckName: string }) => ipcRenderer.invoke(IPC_CHANNELS.srsDraw, request),
   srsReveal: (request: { id: number }) => ipcRenderer.invoke(IPC_CHANNELS.srsReveal, request),
   srsGrade: (request: { id: number; correct: boolean }) =>
-    ipcRenderer.invoke(IPC_CHANNELS.srsGrade, request)
+    ipcRenderer.invoke(IPC_CHANNELS.srsGrade, request),
+  ingestSelectFile: () => ipcRenderer.invoke(IPC_CHANNELS.ingestSelectFile),
+  ingestRun: (request: { path: string; maxChunks?: number }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.ingestRun, request),
+  ingestLibrary: () => ipcRenderer.invoke(IPC_CHANNELS.ingestLibrary),
+  ingestDelete: (request: { sourceTitle: string }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.ingestDelete, request),
+  onIngestProgress: (callback: (progress: IngestProgress) => void) => {
+    const listener = (_event: unknown, progress: IngestProgress): void => callback(progress);
+    ipcRenderer.on(IPC_CHANNELS.ingestProgress, listener);
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.ingestProgress, listener);
+    };
+  }
 };
 
 contextBridge.exposeInMainWorld('api', api);

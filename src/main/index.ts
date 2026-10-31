@@ -1,10 +1,14 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron';
 import { join } from 'node:path';
 import { buildDbStatus } from './db/dbStatus';
 import { openDatabase } from './db/database';
+import { createContentPoolRepo } from './db/repositories/contentPoolRepo';
 import { createFlashcardsRepo } from './db/repositories/flashcardsRepo';
 import { createUserProgressRepo } from './db/repositories/userProgressRepo';
 import { seedDevDataIfEmpty } from './db/seedDevData';
+import { createIngestionService } from './ingestion/ingestionService';
+import { IPC_CHANNELS } from '@shared/ipc-types';
+import type { IngestProgress } from '@shared/ingestion-types';
 import { registerIpcHandlers } from './ipcHandlers';
 import { createAiEngineService } from './ollama/engine';
 import { OllamaClient, toAiResult } from './ollama/ollamaClient';
@@ -66,6 +70,20 @@ app.whenReady().then(() => {
     engine: ai
   });
   const srs = createReviewService({ cards: createFlashcardsRepo(db) });
+  const ingestion = createIngestionService({
+    engine: ai,
+    contentPool: createContentPoolRepo(db)
+  });
+
+  /** Native file picker for the ingestion pipeline. */
+  const selectBookFile = async (): Promise<{ path: string | null }> => {
+    const result = await dialog.showOpenDialog({
+      title: 'Choose a book to ingest',
+      properties: ['openFile'],
+      filters: [{ name: 'Books (PDF, EPUB, TXT)', extensions: ['pdf', 'epub', 'txt'] }]
+    });
+    return { path: result.canceled ? null : (result.filePaths[0] ?? null) };
+  };
 
   registerIpcHandlers(ipcMain, {
     dbStatus: () => buildDbStatus(db),
@@ -80,7 +98,18 @@ app.whenReady().then(() => {
     srsDecks: () => ({ decks: srs.listDecks() }),
     srsDraw: (request) => ({ card: srs.drawCard(request.deckName) }),
     srsReveal: (request) => srs.revealCard(request.id),
-    srsGrade: (request) => srs.gradeCard(request.id, request.correct)
+    srsGrade: (request) => srs.gradeCard(request.id, request.correct),
+    ingestSelectFile: selectBookFile,
+    ingestRun: async (request) => {
+      const onProgress = (progress: IngestProgress): void => {
+        for (const window of BrowserWindow.getAllWindows()) {
+          window.webContents.send(IPC_CHANNELS.ingestProgress, progress);
+        }
+      };
+      return ingestion.run(request.path, { maxChunks: request.maxChunks, onProgress });
+    },
+    ingestLibrary: () => ({ sources: ingestion.listLibrary() }),
+    ingestDelete: (request) => ({ deleted: ingestion.deleteSource(request.sourceTitle) })
   });
 
   createWindow();

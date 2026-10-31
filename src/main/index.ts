@@ -138,9 +138,10 @@ app.whenReady().then(() => {
       });
     },
     epTracks: () => ({ tracks: episodes.listTracks() }),
-    epFeed: (request) => ({ feed: episodes.getDailyFeed(request.bookTitle) }),
+    epFeed: (request) => ({ feed: episodes.getDailyFeed(request.bookTitle, request.episodeNumber) }),
     epFinish: (request) => episodes.finishEpisode(request.bookTitle),
     epQuestions: (request) => ({ questions: episodes.getEpisodeQuestions(request.contentUuid) }),
+    epList: (request) => ({ episodes: episodes.listEpisodeSummaries(request.bookTitle) }),
     readPassages: () => ({ passages: reading.listPassages() }),
     readStart: (request) => ({ session: reading.startSession(request.uuid) }),
     readSubmit: (request) => reading.submitAnswer(request)

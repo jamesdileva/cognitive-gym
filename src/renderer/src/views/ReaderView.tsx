@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { JSX } from 'react';
 import type { EpisodicIngestRequest } from '@shared/episodes-types';
+import type { EpisodeSummary } from '@shared/episodes-types';
 import { useReader } from '../hooks/useReader';
 
 function ProgressBanner({ progress }: { progress: { stage: string; current: number; total: number } }): JSX.Element {
@@ -28,7 +29,46 @@ function ProgressBanner({ progress }: { progress: { stage: string; current: numb
   );
 }
 
-function TrackList(): JSX.Element {
+/** Revisit browser: every episode of a track, openable read-only. */
+function EpisodeBrowser({
+  bookTitle,
+  onOpen
+}: {
+  bookTitle: string;
+  onOpen: (episodeNumber: number) => void;
+}): JSX.Element {
+  const [episodes, setEpisodes] = useState<EpisodeSummary[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void window.api.epList({ bookTitle }).then(({ episodes: list }) => {
+      if (!cancelled) setEpisodes(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [bookTitle]);
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        All episodes
+      </h2>
+      {episodes.map((episode) => (
+        <button
+          key={episode.episodeNumber}
+          className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-left transition hover:border-emerald-700"
+          onClick={() => onOpen(episode.episodeNumber)}
+        >
+          <div className="font-medium text-zinc-200">{episode.episodeTitle}</div>
+          <div className="text-xs text-zinc-500">episode {episode.episodeNumber}</div>
+        </button>
+      ))}
+    </section>
+  );
+}
+
+export default function ReaderView(): JSX.Element {
   const reader = useReader();
   const [isCanonical, setIsCanonical] = useState('true');
   const [limit, setLimit] = useState('');
@@ -43,18 +83,12 @@ function TrackList(): JSX.Element {
     await reader.ingest(request);
   };
 
-  if (reader.feed) {
-    const { feed } = reader;
+  if (reader.browse.length > 0 && reader.feed === null && reader.browseBook) {
+    const bookTitle = reader.browseBook;
     return (
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-6">
         <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">{feed.bookTitle}</h1>
-            <p className="text-xs text-zinc-600">
-              {feed.isCanonical ? 'Serialized track' : 'Anthology track'} · episode {feed.position}{' '}
-              of {feed.total}
-            </p>
-          </div>
+          <h1 className="text-xl font-bold">Episodes</h1>
           <button
             className="rounded border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900"
             onClick={reader.closeTrack}
@@ -62,41 +96,81 @@ function TrackList(): JSX.Element {
             ← Tracks
           </button>
         </header>
+        <EpisodeBrowser bookTitle={bookTitle} onOpen={(n) => void reader.openTrack(bookTitle, n)} />
+      </div>
+    );
+  }
 
-        {feed.episode === null ? (
-          <section className="flex flex-col items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-10">
-            <p className="text-lg font-medium text-emerald-400">Track complete 🎉</p>
-            <p className="text-sm text-zinc-500">You have read every episode of this book.</p>
-          </section>
+  if (reader.feed) {
+    const { feed } = reader;
+    const finished = feed.episode === null && !feed.revisit;
+
+    return (
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
+        <header className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">{feed.bookTitle}</h1>
+            <p className="text-xs text-zinc-600">
+              {feed.revisit ? 'Revisit (streak not affected)' : feed.isCanonical ? 'Serialized track' : 'Anthology track'}{' '}
+              · episode {feed.position} of {feed.total}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              className="rounded border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900"
+              onClick={() => void reader.openBrowse(feed.bookTitle)}
+            >
+              Episodes
+            </button>
+            <button
+              className="rounded border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900"
+              onClick={reader.closeTrack}
+            >
+              ← Tracks
+            </button>
+          </div>
+        </header>
+
+        {finished ? (
+          <>
+            <section className="flex flex-col items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-10">
+              <p className="text-lg font-medium text-emerald-400">Track complete 🎉</p>
+              <p className="text-sm text-zinc-500">
+                You can revisit any episode below — your streak stays where it finished.
+              </p>
+            </section>
+            <EpisodeBrowser
+              bookTitle={feed.bookTitle}
+              onOpen={(n) => void reader.openTrack(feed.bookTitle, n)}
+            />
+          </>
         ) : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <section className="flex flex-col gap-4 lg:col-span-2">
-              {feed.isCanonical && feed.episode.recap && (
+              {feed.episode?.recap && (
                 <p className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm italic text-zinc-400">
-                  Previously: {feed.episode.recap}
-                </p>
-              )}
-              {!feed.isCanonical && feed.episode.recap && (
-                <p className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm italic text-zinc-400">
-                  Hook: {feed.episode.recap}
+                  {feed.isCanonical ? 'Previously: ' : 'Hook: '}
+                  {feed.episode.recap}
                 </p>
               )}
               <article className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
                 <h2 className="mb-3 text-lg font-semibold text-zinc-200">
-                  {feed.episode.episodeTitle}
+                  {feed.episode?.episodeTitle}
                 </h2>
                 <div className="flex flex-col gap-3 text-[15px] leading-relaxed text-zinc-300">
-                  {feed.episode.text.split('\n\n').map((paragraph, index) => (
+                  {feed.episode?.text.split('\n\n').map((paragraph, index) => (
                     <p key={index}>{paragraph}</p>
                   ))}
                 </div>
               </article>
-              <button
-                className="self-start rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-                onClick={() => void reader.markRead()}
-              >
-                Mark as read → next episode
-              </button>
+              {!feed.revisit && (
+                <button
+                  className="self-start rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                  onClick={() => void reader.markRead()}
+                >
+                  Mark as read → next episode
+                </button>
+              )}
             </section>
 
             <aside className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
@@ -114,7 +188,7 @@ function TrackList(): JSX.Element {
                 ))}
               </ol>
               <p className="mt-4 text-xs text-zinc-600">
-                Sit with these while you read — grading arrives with the Reading Room (sprint 7).
+                Answer these in the Reading Room — this passage and its questions are listed there.
               </p>
             </aside>
           </div>
@@ -214,8 +288,4 @@ function TrackList(): JSX.Element {
       </section>
     </div>
   );
-}
-
-export default function ReaderView(): JSX.Element {
-  return <TrackList />;
 }

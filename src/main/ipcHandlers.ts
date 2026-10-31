@@ -15,6 +15,7 @@ import type {
 import type {
   DailyFeed,
   EpisodeQuestion,
+  EpisodeSummary,
   EpisodeTrack,
   EpisodicIngestReport,
   EpisodicIngestRequest
@@ -61,9 +62,10 @@ export interface IpcServices {
   ingestDelete(request: { sourceTitle: string }): { deleted: boolean };
   epIngest(request: EpisodicIngestRequest): Promise<EpisodicIngestReport>;
   epTracks(): { tracks: EpisodeTrack[] };
-  epFeed(request: { bookTitle: string }): { feed: DailyFeed };
+  epFeed(request: { bookTitle: string; episodeNumber?: number }): { feed: DailyFeed };
   epFinish(request: { bookTitle: string }): { nextEpisodeNumber: number | null };
   epQuestions(request: { contentUuid: string }): { questions: EpisodeQuestion[] };
+  epList(request: { bookTitle: string }): { episodes: EpisodeSummary[] };
   readPassages(): { passages: ReadingPassageSummary[] };
   readStart(request: { uuid: string }): { session: ReadingSession };
   readSubmit(request: { uuid: string; questionIndex: number; answer: string }): Promise<GradeResult>;
@@ -115,8 +117,11 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
     services.epIngest(request)
   );
   ipcMain.handle(IPC_CHANNELS.epTracks, () => services.epTracks());
-  ipcMain.handle(IPC_CHANNELS.epFeed, (_event, request: { bookTitle: string }) =>
+  ipcMain.handle(IPC_CHANNELS.epFeed, (_event, request: { bookTitle: string; episodeNumber?: number }) =>
     services.epFeed(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.epList, (_event, request: { bookTitle: string }) =>
+    services.epList(request)
   );
   ipcMain.handle(IPC_CHANNELS.epFinish, (_event, request: { bookTitle: string }) =>
     services.epFinish(request)

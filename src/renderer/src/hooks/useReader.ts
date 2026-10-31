@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type {
   DailyFeed,
   EpisodeQuestion,
+  EpisodeSummary,
   EpisodeTrack,
   EpisodicIngestReport,
   EpisodicIngestRequest
@@ -10,12 +11,14 @@ import type { IngestProgress } from '@shared/ingestion-types';
 
 /**
  * Daily reader state: track list, today's episode, questions, streak advance,
- * plus the episodic ingestion flow.
+ * episode revisiting, plus the episodic ingestion flow.
  */
 export function useReader() {
   const [tracks, setTracks] = useState<EpisodeTrack[]>([]);
   const [feed, setFeed] = useState<DailyFeed | null>(null);
   const [questions, setQuestions] = useState<EpisodeQuestion[]>([]);
+  const [browse, setBrowse] = useState<EpisodeSummary[]>([]);
+  const [browseBook, setBrowseBook] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<IngestProgress | null>(null);
   const [report, setReport] = useState<EpisodicIngestReport | null>(null);
@@ -31,20 +34,34 @@ export function useReader() {
     return window.api.onIngestProgress(setProgress);
   }, [refreshTracks]);
 
-  const openTrack = useCallback(async (bookTitle: string): Promise<void> => {
-    const { feed: daily } = await window.api.epFeed({ bookTitle });
-    setFeed(daily);
+  const loadQuestions = useCallback(async (contentUuid: string | null | undefined): Promise<void> => {
     setQuestions([]);
-    if (daily.episode?.contentUuid) {
-      const { questions: stored } = await window.api.epQuestions({
-        contentUuid: daily.episode.contentUuid
-      });
+    if (contentUuid) {
+      const { questions: stored } = await window.api.epQuestions({ contentUuid });
       setQuestions(stored);
     }
   }, []);
 
+  const openTrack = useCallback(
+    async (bookTitle: string, episodeNumber?: number): Promise<void> => {
+      const { feed: daily } = await window.api.epFeed({ bookTitle, episodeNumber });
+      setFeed(daily);
+      setBrowse([]);
+      await loadQuestions(daily.episode?.contentUuid);
+    },
+    [loadQuestions]
+  );
+
+  const openBrowse = useCallback(async (bookTitle: string): Promise<void> => {
+    const { episodes } = await window.api.epList({ bookTitle });
+    setBrowse(episodes);
+    setBrowseBook(bookTitle);
+    setFeed(null);
+    setQuestions([]);
+  }, []);
+
   const markRead = useCallback(async (): Promise<void> => {
-    if (!feed) return;
+    if (!feed || feed.revisit) return;
     await window.api.epFinish({ bookTitle: feed.bookTitle });
     // Reload at the advanced streak position; the feed shows the next episode
     // (or the completion state when the track is finished).
@@ -53,6 +70,8 @@ export function useReader() {
 
   const closeTrack = useCallback((): void => {
     setFeed(null);
+    setBrowse([]);
+    setBrowseBook(null);
     setQuestions([]);
   }, []);
 
@@ -81,11 +100,14 @@ export function useReader() {
     tracks,
     feed,
     questions,
+    browse,
+    browseBook,
     running,
     progress,
     report,
     error,
     openTrack,
+    openBrowse,
     markRead,
     closeTrack,
     ingest

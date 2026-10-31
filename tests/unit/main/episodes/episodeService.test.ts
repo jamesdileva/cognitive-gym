@@ -163,6 +163,56 @@ describe('episodeService — ingest pipeline (mocked two-agent engine)', () => {
     expect(service.listTracks()[0].currentEpisode).toBe(3); // 2 episodes read → position 3
   });
 
+  it('revisits any episode read-only without touching the streak (completed-track fix)', async () => {
+    const dir = makeTempDir();
+    const path = makeBook(dir, 'revisit.txt');
+    const service = createEpisodeService({
+      engine: makeTwoAgentEngine(),
+      bookEpisodes,
+      contentPool,
+      streaks
+    });
+    await service.run(path, { isCanonical: true, maxEpisodes: 2 });
+    service.finishEpisode('revisit');
+    service.finishEpisode('revisit');
+    expect(service.listTracks()[0].currentEpisode).toBe(3); // completed
+
+    const daily = service.getDailyFeed('revisit');
+    expect(daily.revisit).toBe(false);
+    expect(daily.episode).toBeNull(); // gated shut, as before
+
+    const revisitOne = service.getDailyFeed('revisit', 1);
+    expect(revisitOne.revisit).toBe(true);
+    expect(revisitOne.position).toBe(1);
+    expect(revisitOne.episode?.episodeNumber).toBe(1);
+    expect(revisitOne.episode?.text).toBeTruthy();
+
+    const revisitTwo = service.getDailyFeed('revisit', 2);
+    expect(revisitTwo.revisit).toBe(true);
+    expect(revisitTwo.position).toBe(2);
+
+    // Revisiting must never advance or reset the streak.
+    expect(streaks.get('revisit')?.current_episode).toBe(3);
+    expect(service.listTracks()[0].currentEpisode).toBe(3);
+  });
+
+  it('lists episode summaries for the revisit browser (no text)', async () => {
+    const dir = makeTempDir();
+    const path = makeBook(dir, 'summaries.txt');
+    const service = createEpisodeService({
+      engine: makeTwoAgentEngine(),
+      bookEpisodes,
+      contentPool,
+      streaks
+    });
+    await service.run(path, { isCanonical: true, maxEpisodes: 2 });
+
+    const summaries = service.listEpisodeSummaries('summaries');
+    expect(summaries).toHaveLength(2);
+    expect(summaries[0].episodeNumber).toBe(1);
+    expect(JSON.stringify(summaries)).not.toContain('Paragraph 0'); // content text stays out
+  });
+
   it('honors maxEpisodes', async () => {
     const dir = makeTempDir();
     const path = makeBook(dir, 'limited.txt');

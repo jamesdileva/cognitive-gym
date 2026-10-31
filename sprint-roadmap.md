@@ -20,7 +20,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 7 | Reading Room (Literature & History) | Phase 3–4 | ✅ Done |
 | 8 | Coding Sandbox + Logic & Systems | Phase 4 | ✅ Done |
 | 9 | Synthetic Seed Pipeline | blueprint.md §1 | ✅ Done |
-| 10 | Gamification & Packaging | Phase 5 | ⬜ Not started |
+| 10 | Gamification & Packaging | Phase 5 | ✅ Done |
 
 ---
 
@@ -162,8 +162,8 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 **Goal:** Make the habit stick, then ship installers.
 
 **Scope & plan:**
-- Daily streaks dashboard, progress scatter plots (diagnostic speed over time), module mastery overview.
-- Performance pass (startup time, DB query review).
+- Daily streaks dashboard, progress scatter plots (diagnostic speed over time), module mastery overview. Deviation: the chart plots daily attempts + success ratio (an `attempt_log` history table, migration v4) rather than per-attempt latency — latency was never recorded per attempt; the log enables it later.
+- Performance pass (startup time, DB query review): all dashboard reads are aggregate + indexed (`idx_attempt_log_created`); no per-row renderer scans.
 - Production builds: Windows `.exe` (NSIS) + macOS `.dmg`; verify packaged app runs with local SQLite + Ollama.
 
 **Verify:** e2e smoke suite against packaged build (or dev-equivalent), streak/plot data tests, installer launch verification.

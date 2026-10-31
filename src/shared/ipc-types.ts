@@ -73,7 +73,9 @@ export const IPC_CHANNELS = {
   /** Synthesis: batch-generate synthetic stories into the content pool. */
   synthStories: 'synth:stories',
   /** Synthesis: batch-generate math templates into userData. */
-  synthMath: 'synth:math'
+  synthMath: 'synth:math',
+  /** Dashboard: streaks, mastery, and the 30-day activity series. */
+  dashOverview: 'dash:overview'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

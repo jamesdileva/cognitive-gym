@@ -2,10 +2,13 @@ import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
 import { join } from 'node:path';
 import { buildDbStatus } from './db/dbStatus';
 import { openDatabase } from './db/database';
+import { createUserProgressRepo } from './db/repositories/userProgressRepo';
 import { seedDevDataIfEmpty } from './db/seedDevData';
 import { registerIpcHandlers } from './ipcHandlers';
 import { createAiEngineService } from './ollama/engine';
 import { OllamaClient, toAiResult } from './ollama/ollamaClient';
+import { createMathService } from './math/mathService';
+import { loadMathTemplates } from './math/templateLoader';
 
 const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
@@ -53,11 +56,23 @@ app.whenReady().then(() => {
   }
 
   const ai = createAiEngineService(db, new OllamaClient());
+  const mathTemplates = loadMathTemplates(join(app.getAppPath(), 'content-library', 'math-formulas'));
+  const math = createMathService({
+    templates: mathTemplates,
+    progress: createUserProgressRepo(db),
+    engine: ai
+  });
+
   registerIpcHandlers(ipcMain, {
     dbStatus: () => buildDbStatus(db),
     aiStatus: () => ai.status(),
     aiSetEngine: async (model: string) => ai.setEngine(model),
-    aiGenerate: (request) => toAiResult(ai.generateWithEngine(request))
+    aiGenerate: (request) => toAiResult(ai.generateWithEngine(request)),
+    mathTopics: () => ({ topics: math.listTopics() }),
+    mathNewProblem: (request) => ({ problem: math.newProblem(request.templateId) }),
+    mathCheckAnswer: (request) => math.checkAnswer(request.problem, request.answer),
+    mathReveal: (request) => math.reveal(request.problem),
+    mathHint: (request) => math.hint(request.problem, request.userMessage)
   });
 
   createWindow();

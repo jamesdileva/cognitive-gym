@@ -1,4 +1,11 @@
 import type { AiGenerateRequest, AiResult, AiStatusResponse } from './ai-types';
+import type {
+  MathCheckResponse,
+  MathHintResult,
+  MathProblem,
+  MathRevealResponse,
+  MathTopicSummary
+} from './math-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -12,4 +19,9 @@ export interface GymApi {
   aiStatus(): Promise<AiStatusResponse>;
   aiSetEngine(model: string): Promise<{ engine: string }>;
   aiGenerate(request: AiGenerateRequest): Promise<AiResult>;
+  mathTopics(): Promise<{ topics: MathTopicSummary[] }>;
+  mathNewProblem(request: { templateId: string }): Promise<{ problem: MathProblem }>;
+  mathCheckAnswer(request: { problem: MathProblem; answer: string }): Promise<MathCheckResponse>;
+  mathReveal(request: { problem: MathProblem }): Promise<MathRevealResponse>;
+  mathHint(request: { problem: MathProblem; userMessage: string }): Promise<MathHintResult>;
 }

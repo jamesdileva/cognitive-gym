@@ -1,0 +1,19 @@
+{
+  "template_id": "algebra_linear_01",
+  "topic": "Algebra — Linear Equations",
+  "formula_string": "Solve for x: {a}x + {b} = {c}",
+  "variables": {
+    "a": "random_int_range(2, 6)",
+    "b": "random_int_range(1, 9)",
+    "x": "random_int_range(2, 12)",
+    "c": "a * x + b",
+    "c_minus_b": "c - b"
+  },
+  "ideal_solution_steps": [
+    "Isolate the term containing x by subtracting {b} from both sides.",
+    "You now have {a}x = {c} − {b} = {c_minus_b}.",
+    "Divide both sides by {a} to finish the isolation.",
+    "State the value of x."
+  ],
+  "answer_format": "x = {x}"
+}

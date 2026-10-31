@@ -2,11 +2,13 @@ import { useState } from 'react';
 import type { JSX } from 'react';
 import BakeOffView from './views/BakeOffView';
 import HomeView from './views/HomeView';
+import MathView from './views/MathView';
 
-type ViewId = 'home' | 'bakeoff';
+type ViewId = 'home' | 'math' | 'bakeoff';
 
 const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'home', label: 'Home' },
+  { id: 'math', label: 'Math Gym' },
   { id: 'bakeoff', label: 'AI Bake-Off' }
 ];
 
@@ -32,6 +34,7 @@ export default function App(): JSX.Element {
         <span className="ml-auto font-mono text-xs text-zinc-600">cognitive-gym</span>
       </nav>
       {view === 'home' && <HomeView />}
+      {view === 'math' && <MathView />}
       {view === 'bakeoff' && <BakeOffView />}
     </div>
   );

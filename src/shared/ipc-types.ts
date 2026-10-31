@@ -53,7 +53,13 @@ export const IPC_CHANNELS = {
   /** Episodes: mark today's episode read (advances the streak). */
   epFinish: 'ep:finish',
   /** Episodes: comprehension questions linked to an episode. */
-  epQuestions: 'ep:questions'
+  epQuestions: 'ep:questions',
+  /** Reading Room: passage list with question counts. */
+  readPassages: 'read:passages',
+  /** Reading Room: open a passage session (criteria stay main-side). */
+  readStart: 'read:start',
+  /** Reading Room: submit a free-text answer for semantic grading. */
+  readSubmit: 'read:submit'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

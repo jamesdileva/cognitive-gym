@@ -28,7 +28,8 @@ export type OllamaFailureKind =
   | 'http_error' // Ollama answered with a non-2xx status
   | 'timeout' // request exceeded its time budget
   | 'aborted' // caller cancelled
-  | 'invalid_response'; // body was not the JSON shape Ollama promises
+  | 'invalid_response' // body was not the JSON shape Ollama promises
+  | 'missing_criteria'; // domain failure: no stored solution vector to grade against
 
 export interface AiFailure {
   kind: OllamaFailureKind;

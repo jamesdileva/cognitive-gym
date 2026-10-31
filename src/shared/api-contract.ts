@@ -19,6 +19,11 @@ import type {
   EpisodicIngestReport,
   EpisodicIngestRequest
 } from './episodes-types';
+import type {
+  GradeResult,
+  ReadingPassageSummary,
+  ReadingSession
+} from './reading-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -52,4 +57,11 @@ export interface GymApi {
   epFeed(request: { bookTitle: string }): Promise<{ feed: DailyFeed }>;
   epFinish(request: { bookTitle: string }): Promise<{ nextEpisodeNumber: number | null }>;
   epQuestions(request: { contentUuid: string }): Promise<{ questions: EpisodeQuestion[] }>;
+  readPassages(): Promise<{ passages: ReadingPassageSummary[] }>;
+  readStart(request: { uuid: string }): Promise<{ session: ReadingSession }>;
+  readSubmit(request: {
+    uuid: string;
+    questionIndex: number;
+    answer: string;
+  }): Promise<GradeResult>;
 }

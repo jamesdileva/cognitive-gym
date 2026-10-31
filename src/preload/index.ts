@@ -48,7 +48,11 @@ const api: GymApi = {
   epFeed: (request: { bookTitle: string }) => ipcRenderer.invoke(IPC_CHANNELS.epFeed, request),
   epFinish: (request: { bookTitle: string }) => ipcRenderer.invoke(IPC_CHANNELS.epFinish, request),
   epQuestions: (request: { contentUuid: string }) =>
-    ipcRenderer.invoke(IPC_CHANNELS.epQuestions, request)
+    ipcRenderer.invoke(IPC_CHANNELS.epQuestions, request),
+  readPassages: () => ipcRenderer.invoke(IPC_CHANNELS.readPassages),
+  readStart: (request: { uuid: string }) => ipcRenderer.invoke(IPC_CHANNELS.readStart, request),
+  readSubmit: (request: { uuid: string; questionIndex: number; answer: string }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.readSubmit, request)
 };
 
 contextBridge.exposeInMainWorld('api', api);

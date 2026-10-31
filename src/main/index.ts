@@ -10,6 +10,7 @@ import { createUserProgressRepo } from './db/repositories/userProgressRepo';
 import { seedDevDataIfEmpty } from './db/seedDevData';
 import { createIngestionService } from './ingestion/ingestionService';
 import { createEpisodeService } from './episodes/episodeService';
+import { createReadingService } from './reading/readingService';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 import type { IngestProgress } from '@shared/ingestion-types';
 import { registerIpcHandlers } from './ipcHandlers';
@@ -83,6 +84,11 @@ app.whenReady().then(() => {
     contentPool: createContentPoolRepo(db),
     streaks: createReadingStreaksRepo(db)
   });
+  const reading = createReadingService({
+    engine: ai,
+    contentPool: createContentPoolRepo(db),
+    progress: createUserProgressRepo(db)
+  });
 
   /** Native file picker for the ingestion pipeline. */
   const selectBookFile = async (): Promise<{ path: string | null }> => {
@@ -134,7 +140,10 @@ app.whenReady().then(() => {
     epTracks: () => ({ tracks: episodes.listTracks() }),
     epFeed: (request) => ({ feed: episodes.getDailyFeed(request.bookTitle) }),
     epFinish: (request) => episodes.finishEpisode(request.bookTitle),
-    epQuestions: (request) => ({ questions: episodes.getEpisodeQuestions(request.contentUuid) })
+    epQuestions: (request) => ({ questions: episodes.getEpisodeQuestions(request.contentUuid) }),
+    readPassages: () => ({ passages: reading.listPassages() }),
+    readStart: (request) => ({ session: reading.startSession(request.uuid) }),
+    readSubmit: (request) => reading.submitAnswer(request)
   });
 
   createWindow();

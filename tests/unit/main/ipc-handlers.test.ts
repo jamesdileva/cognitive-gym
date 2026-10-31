@@ -14,6 +14,7 @@ import type {
   EpisodicIngestReport,
   EpisodicIngestRequest
 } from '@shared/episodes-types';
+import type { GradeResult, ReadingPassageSummary, ReadingSession } from '@shared/reading-types';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 
 describe('handlePing', () => {
@@ -78,7 +79,10 @@ describe('registerIpcHandlers', () => {
     epTracks: () => ({ tracks: [] as EpisodeTrack[] }),
     epFeed: () => ({ feed: {} as DailyFeed }),
     epFinish: () => ({ nextEpisodeNumber: null }),
-    epQuestions: () => ({ questions: [] as EpisodeQuestion[] })
+    epQuestions: () => ({ questions: [] as EpisodeQuestion[] }),
+    readPassages: () => ({ passages: [] as ReadingPassageSummary[] }),
+    readStart: () => ({ session: {} as ReadingSession }),
+    readSubmit: async (): Promise<GradeResult> => ({ ok: true, score: 90, feedback: 'good' })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -118,7 +122,10 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.epTracks,
       IPC_CHANNELS.epFeed,
       IPC_CHANNELS.epFinish,
-      IPC_CHANNELS.epQuestions
+      IPC_CHANNELS.epQuestions,
+      IPC_CHANNELS.readPassages,
+      IPC_CHANNELS.readStart,
+      IPC_CHANNELS.readSubmit
     ]);
   });
 

@@ -34,6 +34,7 @@ import type {
   LogicRow,
   SystemsCaseView
 } from '@shared/diagnostics-types';
+import type { SynthesisReport } from '@shared/synthesis-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -82,6 +83,8 @@ export interface IpcServices {
   diagOpen(request: { kind: DiagnosticsKind; id: string }): { item: CodingProblemView | LogicPuzzleView | SystemsCaseView };
   diagSubmit(request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }): Promise<DiagnosticsSubmitResult> | DiagnosticsSubmitResult;
   diagHint(request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }): Promise<{ ok: true; hint: string } | { ok: false; failure: { kind: string; message: string } }>;
+  synthStories(request: { count: number }): Promise<SynthesisReport>;
+  synthMath(request: { count: number }): Promise<SynthesisReport>;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -166,5 +169,11 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
     IPC_CHANNELS.diagHint,
     (_event, request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }) =>
       services.diagHint(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.synthStories, (_event, request: { count: number }) =>
+    services.synthStories(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.synthMath, (_event, request: { count: number }) =>
+    services.synthMath(request)
   );
 }

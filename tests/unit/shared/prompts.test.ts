@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PROMPT_REGISTRY, getPromptTemplate, renderPrompt } from '@shared/prompts';
 
 describe('prompt registry', () => {
-  it('contains the six shipped system prompts with unique ids', () => {
+  it('contains the eight shipped system prompts with unique ids', () => {
     expect(PROMPT_REGISTRY.map((t) => t.id)).toMatchInlineSnapshot(`
       [
         "socratic-math",
@@ -11,6 +11,8 @@ describe('prompt registry', () => {
         "hint-tree-builder",
         "episodic-chunker",
         "reading-grader",
+        "story-architect",
+        "math-template-architect",
       ]
     `);
     expect(new Set(PROMPT_REGISTRY.map((t) => t.id)).size).toBe(PROMPT_REGISTRY.length);
@@ -69,6 +71,25 @@ describe('reading grader guardrails (hints only, no answer key leakage)', () => 
     expect(t.template).toContain('exactly ONE guiding question');
     expect(t.template).toContain('{"score": <integer 0-100>, "feedback"');
     expect(t.placeholders).toEqual(['passage', 'question', 'solution_criteria', 'answer']);
+  });
+});
+
+describe('synthesis prompts (blueprint.md §1)', () => {
+  it('story architect carries the doc constraints verbatim plus the JSON spec', () => {
+    const t = getPromptTemplate('story-architect');
+    expect(t.template).toContain('Hard Sci-Fi, high lexical diversity');
+    expect(t.template).toContain('Exactly 4 paragraphs');
+    expect(t.template).toContain('core logical, philosophical, or scientific dilemma');
+    expect(t.template).toContain('exactly 3 entries');
+    expect(t.template).toContain('{topic}');
+  });
+
+  it('math template architect enforces the gen_ prefix and integer-exact specs', () => {
+    const t = getPromptTemplate('math-template-architect');
+    expect(t.template).toContain('template_id" must start with "gen_"');
+    expect(t.template).toContain('random_int_range(min, max)');
+    expect(t.template).toContain('clean, exact integer answers');
+    expect(t.placeholders).toEqual([]);
   });
 });
 

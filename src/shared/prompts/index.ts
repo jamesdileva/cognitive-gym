@@ -5,6 +5,7 @@ import {
   HINT_TREE_BUILDER,
   LITERARY_COMPRESSOR
 } from './ingestionPrompts';
+import { MATH_TEMPLATE_ARCHITECT, STORY_ARCHITECT } from './synthesisPrompts';
 
 export type { PromptTemplate } from './socraticPrompts';
 export {
@@ -17,6 +18,7 @@ export {
   HINT_TREE_BUILDER,
   EPISODIC_CHUNKER
 } from './ingestionPrompts';
+export { STORY_ARCHITECT, MATH_TEMPLATE_ARCHITECT } from './synthesisPrompts';
 
 /** The full registry — every system prompt the app ships, in one place (AGENTS.md §7). */
 export const PROMPT_REGISTRY: readonly PromptTemplate[] = [
@@ -25,7 +27,9 @@ export const PROMPT_REGISTRY: readonly PromptTemplate[] = [
   LITERARY_COMPRESSOR,
   HINT_TREE_BUILDER,
   EPISODIC_CHUNKER,
-  READING_GRADER
+  READING_GRADER,
+  STORY_ARCHITECT,
+  MATH_TEMPLATE_ARCHITECT
 ];
 
 export function getPromptTemplate(id: string): PromptTemplate {

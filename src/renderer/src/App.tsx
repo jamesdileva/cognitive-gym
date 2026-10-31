@@ -3,13 +3,14 @@ import type { JSX } from 'react';
 import BakeOffView from './views/BakeOffView';
 import DiagnosticsView from './views/DiagnosticsView';
 import FlashcardsView from './views/FlashcardsView';
+import GeneratorView from './views/GeneratorView';
 import HomeView from './views/HomeView';
 import LibraryView from './views/LibraryView';
 import MathView from './views/MathView';
 import ReaderView from './views/ReaderView';
 import ReadingRoomView from './views/ReadingRoomView';
 
-type ViewId = 'home' | 'math' | 'srs' | 'reader' | 'room' | 'diag' | 'library' | 'bakeoff';
+type ViewId = 'home' | 'math' | 'srs' | 'reader' | 'room' | 'diag' | 'library' | 'generator' | 'bakeoff';
 
 const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'home', label: 'Home' },
@@ -19,6 +20,7 @@ const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'room', label: 'Reading Room' },
   { id: 'diag', label: 'Diagnostics' },
   { id: 'library', label: 'Library' },
+  { id: 'generator', label: 'Generator' },
   { id: 'bakeoff', label: 'AI Bake-Off' }
 ];
 
@@ -50,6 +52,7 @@ export default function App(): JSX.Element {
       {view === 'room' && <ReadingRoomView />}
       {view === 'diag' && <DiagnosticsView />}
       {view === 'library' && <LibraryView />}
+      {view === 'generator' && <GeneratorView />}
       {view === 'bakeoff' && <BakeOffView />}
     </div>
   );

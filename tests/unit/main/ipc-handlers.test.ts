@@ -16,6 +16,7 @@ import type {
   EpisodicIngestRequest
 } from '@shared/episodes-types';
 import type { GradeResult, ReadingPassageSummary, ReadingSession } from '@shared/reading-types';
+import type { SynthesisReport } from '@shared/synthesis-types';
 import type {
   DiagnosticsListItem,
   DiagnosticsSubmitResult,
@@ -99,7 +100,19 @@ describe('registerIpcHandlers', () => {
       correct: true,
       note: ''
     }),
-    diagHint: async () => ({ ok: true, hint: '' })
+    diagHint: async () => ({ ok: true, hint: '' }),
+    synthStories: async (): Promise<SynthesisReport> => ({
+      requested: 0,
+      generated: 0,
+      questionCount: 0,
+      failures: []
+    }),
+    synthMath: async (): Promise<SynthesisReport> => ({
+      requested: 0,
+      generated: 0,
+      questionCount: 0,
+      failures: []
+    })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -147,7 +160,9 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.diagContent,
       IPC_CHANNELS.diagOpen,
       IPC_CHANNELS.diagSubmit,
-      IPC_CHANNELS.diagHint
+      IPC_CHANNELS.diagHint,
+      IPC_CHANNELS.synthStories,
+      IPC_CHANNELS.synthMath
     ]);
   });
 

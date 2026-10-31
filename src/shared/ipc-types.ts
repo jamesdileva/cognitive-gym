@@ -69,7 +69,11 @@ export const IPC_CHANNELS = {
   /** Diagnostics rooms: submit an answer/board for checking or grading. */
   diagSubmit: 'diag:submit',
   /** Diagnostics rooms: hint ladder (coding) / contradiction alert (logic). */
-  diagHint: 'diag:hint'
+  diagHint: 'diag:hint',
+  /** Synthesis: batch-generate synthetic stories into the content pool. */
+  synthStories: 'synth:stories',
+  /** Synthesis: batch-generate math templates into userData. */
+  synthMath: 'synth:math'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

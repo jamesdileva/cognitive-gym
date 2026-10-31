@@ -34,6 +34,7 @@ import type {
   LogicRow,
   SystemsCaseView
 } from './diagnostics-types';
+import type { SynthesisReport } from './synthesis-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -91,4 +92,6 @@ export interface GymApi {
     id: string;
     answer: string | LogicRow[];
   }): Promise<{ ok: true; hint: string } | { ok: false; failure: { kind: string; message: string } }>;
+  synthStories(request: { count: number }): Promise<SynthesisReport>;
+  synthMath(request: { count: number }): Promise<SynthesisReport>;
 }

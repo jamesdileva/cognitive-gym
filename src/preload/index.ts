@@ -61,7 +61,10 @@ const api: GymApi = {
   diagSubmit: (request: { kind: string; id: string; answer: string | Record<string, string>[] }) =>
     ipcRenderer.invoke(IPC_CHANNELS.diagSubmit, request),
   diagHint: (request: { kind: string; id: string; answer: string | Record<string, string>[] }) =>
-    ipcRenderer.invoke(IPC_CHANNELS.diagHint, request)
+    ipcRenderer.invoke(IPC_CHANNELS.diagHint, request),
+  synthStories: (request: { count: number }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.synthStories, request),
+  synthMath: (request: { count: number }) => ipcRenderer.invoke(IPC_CHANNELS.synthMath, request)
 };
 
 contextBridge.exposeInMainWorld('api', api);

@@ -34,3 +34,15 @@ export function loadMathTemplates(dir: string): MathTemplate[] {
 
   return templates;
 }
+
+/**
+ * Merges seed templates with generated ones (Sprint 9): seeds win on
+ * template_id collisions, so a generated template can never shadow a
+ * committed one. Duplicates inside either list stay an error (the loader
+ * enforces that per directory).
+ */
+export function mergeMathTemplates(seed: MathTemplate[], generated: MathTemplate[]): MathTemplate[] {
+  const seedIds = new Set(seed.map((template) => template.template_id));
+  const additions = generated.filter((template) => !seedIds.has(template.template_id));
+  return [...seed, ...additions];
+}

@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildDbStatus } from './db/dbStatus';
 import { openDatabase } from './db/database';
@@ -20,8 +21,9 @@ import { registerIpcHandlers } from './ipcHandlers';
 import { createAiEngineService } from './ollama/engine';
 import { OllamaClient, toAiResult } from './ollama/ollamaClient';
 import { createMathService } from './math/mathService';
-import { loadMathTemplates } from './math/templateLoader';
+import { loadMathTemplates, mergeMathTemplates } from './math/templateLoader';
 import { createReviewService } from './srs/reviewService';
+import { createSynthesisService } from './synthesis/synthesisService';
 
 const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
@@ -70,11 +72,20 @@ app.whenReady().then(() => {
   }
 
   const ai = createAiEngineService(db, new OllamaClient());
-  const mathTemplates = loadMathTemplates(join(app.getAppPath(), 'content-library', 'math-formulas'));
+  const seedMath = loadMathTemplates(join(appRoot, 'content-library', 'math-formulas'));
+  const generatedMathDir = join(app.getPath('userData'), 'math-templates');
+  const generatedMath = existsSync(generatedMathDir)
+    ? loadMathTemplates(generatedMathDir)
+    : [];
   const math = createMathService({
-    templates: mathTemplates,
+    templates: mergeMathTemplates(seedMath, generatedMath),
     progress: createUserProgressRepo(db),
     engine: ai
+  });
+  const synthesis = createSynthesisService({
+    engine: ai,
+    contentPool: createContentPoolRepo(db),
+    mathTemplatesDir: generatedMathDir
   });
   const srs = createReviewService({ cards: createFlashcardsRepo(db) });
   const ingestion = createIngestionService({
@@ -108,6 +119,13 @@ app.whenReady().then(() => {
     return { path: result.canceled ? null : (result.filePaths[0] ?? null) };
   };
 
+  /** Fan-out for every long-running pipeline's progress events. */
+  const emitIngestProgress = (progress: IngestProgress): void => {
+    for (const window of BrowserWindow.getAllWindows()) {
+      window.webContents.send(IPC_CHANNELS.ingestProgress, progress);
+    }
+  };
+
   registerIpcHandlers(ipcMain, {
     dbStatus: () => buildDbStatus(db),
     aiStatus: () => ai.status(),
@@ -123,28 +141,18 @@ app.whenReady().then(() => {
     srsReveal: (request) => srs.revealCard(request.id),
     srsGrade: (request) => srs.gradeCard(request.id, request.correct),
     ingestSelectFile: selectBookFile,
-    ingestRun: async (request) => {
-      const onProgress = (progress: IngestProgress): void => {
-        for (const window of BrowserWindow.getAllWindows()) {
-          window.webContents.send(IPC_CHANNELS.ingestProgress, progress);
-        }
-      };
-      return ingestion.run(request.path, { maxChunks: request.maxChunks, onProgress });
-    },
+    ingestRun: (request) => ingestion.run(request.path, {
+      maxChunks: request.maxChunks,
+      onProgress: emitIngestProgress
+    }),
     ingestLibrary: () => ({ sources: ingestion.listLibrary() }),
     ingestDelete: (request) => ({ deleted: ingestion.deleteSource(request.sourceTitle) }),
-    epIngest: async (request) => {
-      const onProgress = (progress: IngestProgress): void => {
-        for (const window of BrowserWindow.getAllWindows()) {
-          window.webContents.send(IPC_CHANNELS.ingestProgress, progress);
-        }
-      };
-      return episodes.run(request.path, {
+    epIngest: (request) =>
+      episodes.run(request.path, {
         isCanonical: request.isCanonical,
         maxEpisodes: request.maxEpisodes,
-        onProgress
-      });
-    },
+        onProgress: emitIngestProgress
+      }),
     epTracks: () => ({ tracks: episodes.listTracks() }),
     epFeed: (request) => ({ feed: episodes.getDailyFeed(request.bookTitle, request.episodeNumber) }),
     epFinish: (request) => episodes.finishEpisode(request.bookTitle),
@@ -168,7 +176,10 @@ app.whenReady().then(() => {
         ok: false,
         failure: { kind: 'invalid_response', message: 'No hint ladder for this room.' }
       });
-    }
+    },
+    synthStories: (request) =>
+      synthesis.generateStories(request.count, emitIngestProgress),
+    synthMath: (request) => synthesis.generateMathTemplates(request.count, emitIngestProgress)
   });
 
   createWindow();

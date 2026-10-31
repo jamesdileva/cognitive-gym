@@ -16,6 +16,13 @@ import type {
   EpisodicIngestRequest
 } from '@shared/episodes-types';
 import type { GradeResult, ReadingPassageSummary, ReadingSession } from '@shared/reading-types';
+import type {
+  DiagnosticsListItem,
+  DiagnosticsSubmitResult,
+  CodingProblemView,
+  LogicPuzzleView,
+  SystemsCaseView,
+} from '@shared/diagnostics-types';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 
 describe('handlePing', () => {
@@ -84,7 +91,15 @@ describe('registerIpcHandlers', () => {
     epList: () => ({ episodes: [] as EpisodeSummary[] }),
     readPassages: () => ({ passages: [] as ReadingPassageSummary[] }),
     readStart: () => ({ session: {} as ReadingSession }),
-    readSubmit: async (): Promise<GradeResult> => ({ ok: true, score: 90, feedback: 'good' })
+    readSubmit: async (): Promise<GradeResult> => ({ ok: true, score: 90, feedback: 'good' }),
+    diagContent: () => ({ items: [] as DiagnosticsListItem[] }),
+    diagOpen: () => ({ item: {} as CodingProblemView | LogicPuzzleView | SystemsCaseView }),
+    diagSubmit: async (): Promise<DiagnosticsSubmitResult> => ({
+      kind: 'logic',
+      correct: true,
+      note: ''
+    }),
+    diagHint: async () => ({ ok: true, hint: '' })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -128,7 +143,11 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.epQuestions,
       IPC_CHANNELS.readPassages,
       IPC_CHANNELS.readStart,
-      IPC_CHANNELS.readSubmit
+      IPC_CHANNELS.readSubmit,
+      IPC_CHANNELS.diagContent,
+      IPC_CHANNELS.diagOpen,
+      IPC_CHANNELS.diagSubmit,
+      IPC_CHANNELS.diagHint
     ]);
   });
 

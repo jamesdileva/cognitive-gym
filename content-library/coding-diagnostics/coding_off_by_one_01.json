@@ -1,0 +1,8 @@
+{
+  "problem_id": "coding_off_by_one_01",
+  "title": "The Average That Crashes",
+  "language": "python",
+  "goal": "summarize_readings should return the average of the list without raising an exception.",
+  "code": "def summarize_readings(readings):\n    \"\"\"Return the average of all readings.\"\"\"\n    total = 0\n    for i in range(len(readings)):\n        total += readings[i + 1]\n    return total / len(readings)",
+  "bug_criteria": "Must identify the off-by-one index: readings[i + 1] reads one past the end on the final iteration, raising an IndexError. The fix is to index with readings[i] (or iterate the values directly)."
+}

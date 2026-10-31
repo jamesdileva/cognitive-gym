@@ -11,6 +11,9 @@ import { seedDevDataIfEmpty } from './db/seedDevData';
 import { createIngestionService } from './ingestion/ingestionService';
 import { createEpisodeService } from './episodes/episodeService';
 import { createReadingService } from './reading/readingService';
+import { loadDiagnosticsContent } from './diagnostics/diagnosticsLoader';
+import { createDiagnosticsService } from './diagnostics/diagnosticsService';
+import type { LogicRow } from '@shared/diagnostics-types';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 import type { IngestProgress } from '@shared/ingestion-types';
 import { registerIpcHandlers } from './ipcHandlers';
@@ -89,6 +92,11 @@ app.whenReady().then(() => {
     contentPool: createContentPoolRepo(db),
     progress: createUserProgressRepo(db)
   });
+  const diagnostics = createDiagnosticsService({
+    engine: ai,
+    progress: createUserProgressRepo(db),
+    content: loadDiagnosticsContent(join(appRoot, 'content-library'))
+  });
 
   /** Native file picker for the ingestion pipeline. */
   const selectBookFile = async (): Promise<{ path: string | null }> => {
@@ -144,7 +152,23 @@ app.whenReady().then(() => {
     epList: (request) => ({ episodes: episodes.listEpisodeSummaries(request.bookTitle) }),
     readPassages: () => ({ passages: reading.listPassages() }),
     readStart: (request) => ({ session: reading.startSession(request.uuid) }),
-    readSubmit: (request) => reading.submitAnswer(request)
+    readSubmit: (request) => reading.submitAnswer(request),
+    diagContent: (request) => diagnostics.list(request.kind),
+    diagOpen: (request) => diagnostics.open(request.kind, request.id),
+    diagSubmit: (request) =>
+      diagnostics.submit({ kind: request.kind, id: request.id, answer: request.answer }),
+    diagHint: (request) => {
+      if (request.kind === 'coding') {
+        return diagnostics.codingHint(request.id, request.answer as string);
+      }
+      if (request.kind === 'logic') {
+        return diagnostics.logicHint(request.id, request.answer as LogicRow[]);
+      }
+      return Promise.resolve({
+        ok: false,
+        failure: { kind: 'invalid_response', message: 'No hint ladder for this room.' }
+      });
+    }
   });
 
   createWindow();

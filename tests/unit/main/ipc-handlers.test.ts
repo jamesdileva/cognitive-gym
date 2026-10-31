@@ -4,6 +4,7 @@ import { openDatabase } from '@main/db/database';
 import { createFlashcardsRepo } from '@main/db/repositories/flashcardsRepo';
 import { handlePing, registerIpcHandlers, type IpcServices } from '@main/ipcHandlers';
 import type { AiGenerateRequest, AiResult, AiStatusResponse } from '@shared/ai-types';
+import type { MathHintResult, MathProblem, MathTopicSummary } from '@shared/math-types';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 
 describe('handlePing', () => {
@@ -22,6 +23,13 @@ describe('handlePing', () => {
 });
 
 describe('registerIpcHandlers', () => {
+  const sampleProblem: MathProblem = {
+    templateId: 'calc1_power_rule_01',
+    seed: 1,
+    topic: 'Calculus 1 — Power Rule',
+    display: 'Differentiate: f(x) = 3x^5'
+  };
+
   const noopServices: IpcServices = {
     dbStatus: () => ({ migrationVersion: 2, tableCounts: {}, totalRows: 0 }),
     aiStatus: async () => ({ engine: 'qwen2.5:7b', models: [], ollamaAvailable: false }),
@@ -29,7 +37,12 @@ describe('registerIpcHandlers', () => {
     aiGenerate: async (_request: AiGenerateRequest): Promise<AiResult> => ({
       ok: false,
       failure: { kind: 'unreachable', message: 'not wired in this test' }
-    })
+    }),
+    mathTopics: () => ({ topics: [] as MathTopicSummary[] }),
+    mathNewProblem: () => ({ problem: sampleProblem }),
+    mathCheckAnswer: () => ({ correct: false, note: '' }),
+    mathReveal: () => ({ steps: [], answer: '' }),
+    mathHint: async () => ({ ok: true, hint: 'Look at the exponent.' })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -51,7 +64,12 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.dbStatus,
       IPC_CHANNELS.aiStatus,
       IPC_CHANNELS.aiSetEngine,
-      IPC_CHANNELS.aiGenerate
+      IPC_CHANNELS.aiGenerate,
+      IPC_CHANNELS.mathTopics,
+      IPC_CHANNELS.mathNewProblem,
+      IPC_CHANNELS.mathCheckAnswer,
+      IPC_CHANNELS.mathReveal,
+      IPC_CHANNELS.mathHint
     ]);
   });
 
@@ -135,5 +153,41 @@ describe('registerIpcHandlers', () => {
     const outcome = await generateHandler({}, request);
     expect(outcome.ok).toBe(true);
     expect(aiGenerate).toHaveBeenCalledWith(request);
+  });
+
+  it('delegates math channels to the math service', async () => {
+    const mathTopics = vi.fn(() => ({ topics: [] }));
+    const mathNewProblem = vi.fn(() => ({ problem: sampleProblem }));
+    const mathCheckAnswer = vi.fn(() => ({ correct: true, note: 'Correct.' }));
+    const mathReveal = vi.fn(() => ({ steps: ['s1'], answer: 'x = 6' }));
+    const mathHint = vi.fn(async (): Promise<MathHintResult> => ({ ok: true, hint: 'Check the exponent.' }));
+
+    const handlers = new Map<string, unknown>();
+    registerIpcHandlers(
+      { handle: (channel, handler) => void handlers.set(channel, handler) },
+      { ...noopServices, mathTopics, mathNewProblem, mathCheckAnswer, mathReveal, mathHint }
+    );
+
+    (handlers.get(IPC_CHANNELS.mathTopics) as () => unknown)();
+    const newProblem = (
+      handlers.get(IPC_CHANNELS.mathNewProblem) as (event: unknown, request: unknown) => unknown
+    )({}, { templateId: 'calc1_power_rule_01' });
+    const check = (
+      handlers.get(IPC_CHANNELS.mathCheckAnswer) as (event: unknown, request: unknown) => unknown
+    )({}, { problem: sampleProblem, answer: 'x = 6' });
+    (handlers.get(IPC_CHANNELS.mathReveal) as (event: unknown, request: unknown) => unknown)(
+      {},
+      { problem: sampleProblem }
+    );
+    await (
+      handlers.get(IPC_CHANNELS.mathHint) as (event: unknown, request: unknown) => Promise<unknown>
+    )({}, { problem: sampleProblem, userMessage: 'why?' });
+
+    expect(mathTopics).toHaveBeenCalledOnce();
+    expect(mathNewProblem).toHaveBeenCalledWith({ templateId: 'calc1_power_rule_01' });
+    expect(newProblem).toEqual({ problem: sampleProblem });
+    expect(check).toEqual({ correct: true, note: 'Correct.' });
+    expect(mathReveal).toHaveBeenCalledWith({ problem: sampleProblem });
+    expect(mathHint).toHaveBeenCalledWith({ problem: sampleProblem, userMessage: 'why?' });
   });
 });

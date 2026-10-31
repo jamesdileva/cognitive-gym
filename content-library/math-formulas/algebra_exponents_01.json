@@ -1,0 +1,17 @@
+{
+  "template_id": "algebra_exponents_01",
+  "topic": "Algebra — Product Rule for Exponents",
+  "formula_string": "Simplify fully: x^{a} · x^{b} = x^?",
+  "variables": {
+    "a": "random_int_range(2, 9)",
+    "b": "random_int_range(2, 9)",
+    "s": "a + b"
+  },
+  "ideal_solution_steps": [
+    "Recall the rule: multiplying powers with the same base adds the exponents.",
+    "Add the exponents: {a} + {b} = {s}.",
+    "Keep the base x unchanged and write the new exponent.",
+    "State the simplified expression."
+  ],
+  "answer_format": "x^{s}"
+}

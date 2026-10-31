@@ -15,7 +15,17 @@ export const IPC_CHANNELS = {
   /** Persist the engine model selection. */
   aiSetEngine: 'ai:set-engine',
   /** Run one non-streaming generation against a named model. */
-  aiGenerate: 'ai:generate'
+  aiGenerate: 'ai:generate',
+  /** Math module: topic list joined with user progress. */
+  mathTopics: 'math:topics',
+  /** Math module: generate a fresh problem instance (answer stays main-side). */
+  mathNewProblem: 'math:new-problem',
+  /** Math module: check a user answer (records an attempt). */
+  mathCheckAnswer: 'math:check',
+  /** Math module: user-initiated worked solution. */
+  mathReveal: 'math:reveal',
+  /** Math module: Socratic hint via the registry prompt. */
+  mathHint: 'math:hint'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

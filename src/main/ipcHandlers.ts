@@ -1,5 +1,12 @@
 import type { IpcMain } from 'electron';
 import type { AiGenerateRequest, AiResult, AiStatusResponse } from '@shared/ai-types';
+import type {
+  MathCheckResponse,
+  MathHintResult,
+  MathProblem,
+  MathRevealResponse,
+  MathTopicSummary
+} from '@shared/math-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -22,6 +29,11 @@ export interface IpcServices {
   aiStatus(): Promise<AiStatusResponse>;
   aiSetEngine(model: string): Promise<{ engine: string }>;
   aiGenerate(request: AiGenerateRequest): Promise<AiResult>;
+  mathTopics(): { topics: MathTopicSummary[] };
+  mathNewProblem(request: { templateId: string }): { problem: MathProblem };
+  mathCheckAnswer(request: { problem: MathProblem; answer: string }): MathCheckResponse;
+  mathReveal(request: { problem: MathProblem }): MathRevealResponse;
+  mathHint(request: { problem: MathProblem; userMessage: string }): Promise<MathHintResult>;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -34,5 +46,18 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
   ipcMain.handle(IPC_CHANNELS.aiSetEngine, (_event, model: string) => services.aiSetEngine(model));
   ipcMain.handle(IPC_CHANNELS.aiGenerate, (_event, request: AiGenerateRequest) =>
     services.aiGenerate(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.mathTopics, () => services.mathTopics());
+  ipcMain.handle(IPC_CHANNELS.mathNewProblem, (_event, request: { templateId: string }) =>
+    services.mathNewProblem(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.mathCheckAnswer, (_event, request: { problem: MathProblem; answer: string }) =>
+    services.mathCheckAnswer(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.mathReveal, (_event, request: { problem: MathProblem }) =>
+    services.mathReveal(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.mathHint, (_event, request: { problem: MathProblem; userMessage: string }) =>
+    services.mathHint(request)
   );
 }

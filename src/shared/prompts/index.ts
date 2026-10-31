@@ -1,4 +1,5 @@
 import { CODE_DIAGNOSTICS, SOCRATIC_MATH, type PromptTemplate } from './socraticPrompts';
+import { READING_GRADER } from './readingGrader';
 import {
   EPISODIC_CHUNKER,
   HINT_TREE_BUILDER,
@@ -10,6 +11,7 @@ export {
   SOCRATIC_MATH,
   CODE_DIAGNOSTICS
 } from './socraticPrompts';
+export { READING_GRADER } from './readingGrader';
 export {
   LITERARY_COMPRESSOR,
   HINT_TREE_BUILDER,
@@ -22,7 +24,8 @@ export const PROMPT_REGISTRY: readonly PromptTemplate[] = [
   CODE_DIAGNOSTICS,
   LITERARY_COMPRESSOR,
   HINT_TREE_BUILDER,
-  EPISODIC_CHUNKER
+  EPISODIC_CHUNKER,
+  READING_GRADER
 ];
 
 export function getPromptTemplate(id: string): PromptTemplate {

@@ -16,17 +16,8 @@ import { loadFlashcardDecks } from '../srs/deckLoader';
  */
 export function seedDevDataIfEmpty(db: GymDatabase, flashcardsDir: string): void {
   seedFlashcardDecks(db, flashcardsDir);
-
-  const empty = (table: string): boolean =>
-    (db.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number }).c === 0;
-
-  if (!empty('content_pool') || !empty('book_episodes')) return;
-
-  const seed = db.transaction(() => {
-    seedContentPool(db);
-    seedBookEpisodes(db);
-  });
-  seed();
+  seedContentPool(db);
+  seedBookEpisodes(db);
 }
 
 function seedFlashcardDecks(db: GymDatabase, flashcardsDir: string): void {
@@ -41,51 +32,105 @@ function seedFlashcardDecks(db: GymDatabase, flashcardsDir: string): void {
 
 function seedContentPool(db: GymDatabase): void {
   const repo = createContentPoolRepo(db);
-  repo.insertWithPrompts({
-    module: 'english',
-    subTopic: 'Golden Age Sci-Fi',
-    sourceType: 'synthetic',
-    sourceTitle: 'The Lantern Watch (synthetic demo)',
-    passageBody:
-      'The keeper of Lantern Nine had recorded the same tide for forty years: a silver line drawn ' +
-      'across the same page, at the same hour, without deviation. On the night the line arrived ' +
-      'eleven minutes early, he did not report it. He checked his clock against the stars, found ' +
-      'the stars obedient, and understood that the sea itself had changed its mind. By morning, ' +
-      'three more stations reported the same drift, and the fourth reported nothing at all.',
-    prompts: [
-      {
-        questionIndex: 1,
-        promptText: 'Why does the keeper choose not to report the early tide immediately?',
-        solutionCriteria:
-          'Must identify his verification ritual (clock vs stars) as evidence of methodical doubt rather than negligence.',
-        hintTier1: 'Consider what the keeper trusts more than his instruments.',
-        hintTier2: 'Note the order of his checks: clock first, stars second. What does that sequence imply?',
-        hintTier3: 'His silence is provisional — he is gathering proof, not hiding the anomaly.'
-      },
-      {
-        questionIndex: 2,
-        promptText: 'What does the fourth station reporting "nothing at all" suggest?',
-        solutionCriteria:
-          'Must read the ambiguity: silence could mean equipment failure, evacuation, or the anomaly reaching the station itself.',
-        hintTier1: 'The story treats silence as information.',
-        hintTier2: 'Contrast "reported the same drift" with "reported nothing" — both are signals.',
-        hintTier3: 'The escalation pattern implies the anomaly is spreading outward from Lantern Nine.'
-      },
-      {
-        questionIndex: 3,
-        promptText: 'How does the forty-year routine sharpen the impact of the eleven-minute drift?',
-        solutionCriteria:
-          'Must connect the long stability to the scale of the deviation: the routine is the measuring instrument.',
-        hintTier1: 'Ask what the routine measures besides the tide.',
-        hintTier2: 'Forty years of sameness functions as a baseline — deviation is only meaningful against it.',
-        hintTier3: 'The line "without deviation" is the story’s calibration: eleven minutes now outweighs any absolute size.'
-      }
-    ]
-  });
+  const exists = (title: string): boolean =>
+    repo.listSummaries().some((summary) => summary.source_title === title);
+
+  if (!exists('The Lantern Watch (synthetic demo)')) {
+    repo.insertWithPrompts({
+      module: 'english',
+      subTopic: 'Golden Age Sci-Fi',
+      sourceType: 'synthetic',
+      sourceTitle: 'The Lantern Watch (synthetic demo)',
+      passageBody:
+        'The keeper of Lantern Nine had recorded the same tide for forty years: a silver line drawn ' +
+        'across the same page, at the same hour, without deviation. On the night the line arrived ' +
+        'eleven minutes early, he did not report it. He checked his clock against the stars, found ' +
+        'the stars obedient, and understood that the sea itself had changed its mind. By morning, ' +
+        'three more stations reported the same drift, and the fourth reported nothing at all.',
+      prompts: [
+        {
+          questionIndex: 1,
+          promptText: 'Why does the keeper choose not to report the early tide immediately?',
+          solutionCriteria:
+            'Must identify his verification ritual (clock vs stars) as evidence of methodical doubt rather than negligence.',
+          hintTier1: 'Consider what the keeper trusts more than his instruments.',
+          hintTier2: 'Note the order of his checks: clock first, stars second. What does that sequence imply?',
+          hintTier3: 'His silence is provisional — he is gathering proof, not hiding the anomaly.'
+        },
+        {
+          questionIndex: 2,
+          promptText: 'What does the fourth station reporting "nothing at all" suggest?',
+          solutionCriteria:
+            'Must read the ambiguity: silence could mean equipment failure, evacuation, or the anomaly reaching the station itself.',
+          hintTier1: 'The story treats silence as information.',
+          hintTier2: 'Contrast "reported the same drift" with "reported nothing" — both are signals.',
+          hintTier3: 'The escalation pattern implies the anomaly is spreading outward from Lantern Nine.'
+        },
+        {
+          questionIndex: 3,
+          promptText: 'How does the forty-year routine sharpen the impact of the eleven-minute drift?',
+          solutionCriteria:
+            'Must connect the long stability to the scale of the deviation: the routine is the measuring instrument.',
+          hintTier1: 'Ask what the routine measures besides the tide.',
+          hintTier2: 'Forty years of sameness functions as a baseline — deviation is only meaningful against it.',
+          hintTier3: 'The line "without deviation" is the story’s calibration: eleven minutes now outweighs any absolute size.'
+        }
+      ]
+    });
+  }
+
+  if (!exists('The Pharos Ledger (synthetic demo)')) {
+    repo.insertWithPrompts({
+      module: 'history',
+      subTopic: 'Ancient Engineering',
+      sourceType: 'synthetic',
+      sourceTitle: 'The Pharos Ledger (synthetic demo)',
+      passageBody:
+        'The harbor ledger of Alexandria records three separate budgets for the great lighthouse: ' +
+        'one for the stone, one for the fire, and one — larger than both — for the mirrors. ' +
+        'Contemporary accounts argue about the flame, but the ledger is uninterested in flame. ' +
+        'Polished bronze, not fire, was the technology that made the Pharos legendary: a suite of ' +
+        'reflectors, re-tuned nightly by a keeper-engineer, that bent a modest fire into a beam ' +
+        'sailors trusted at thirty miles. When the mirror suite degraded, the light did not go out; ' +
+        'it merely became ordinary, and ships began, without ceremony, to steer by the stars again. ' +
+        'The lesson the ledger preserves is easy to miss: empires rarely collapse. Their ' +
+        'maintenance budgets do.',
+      prompts: [
+        {
+          questionIndex: 1,
+          promptText: 'What does the ledger structure (three budgets) reveal about how the lighthouse actually worked?',
+          solutionCriteria:
+            'Must identify that the mirrors/reflector budget as the largest signals the beam was an engineered optics system, not simply a big fire.',
+          hintTier1: 'Ask what the ledger spends the most on, and what that money must have been for.',
+          hintTier2: 'The fire is the smallest line item. What does that inversion tell you about the real technology?',
+          hintTier3: 'The passage says polished bronze bent a modest fire into a beam — the marvel was maintenance, not combustion.'
+        },
+        {
+          questionIndex: 2,
+          promptText: 'Why does the passage describe ships steering "by the stars again" after the mirrors degraded?',
+          solutionCriteria:
+            'Must read the degradation as a slow, quiet failure of maintenance rather than a dramatic destruction event.',
+          hintTier1: 'Note that the light "did not go out" — so what changed for the sailors?',
+          hintTier2: '"Ordinary" is the key word: the failure was a loss of exceptional value, not of existence.',
+          hintTier3: 'The sentence is about trust migrating to a fallback — degradation, not destruction.'
+        },
+        {
+          questionIndex: 3,
+          promptText: 'Explain the final sentence as the argument of the whole passage.',
+          solutionCriteria:
+            'Must connect the mirror-maintenance theme to the claim that institutional decline comes from neglected upkeep, not sudden collapse.',
+          hintTier1: 'The Pharos is being used as evidence for a general claim — what claim?',
+          hintTier2: 'Track the verbs: degrade, re-tune, maintain. What system is actually being described?',
+          hintTier3: 'Budgets are the passage\'s protagonists: the lighthouse fell when the line item did.'
+        }
+      ]
+    });
+  }
 }
 
 function seedBookEpisodes(db: GymDatabase): void {
   const repo = createBookEpisodesRepo(db);
+  if (repo.listBooks().some((book) => book.book_title === 'Demo: Signal Hill Nights')) return;
   repo.insertBook('Demo: Signal Hill Nights', [
     {
       episodeNumber: 1,

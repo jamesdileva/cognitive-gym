@@ -17,7 +17,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 4 | Flashcards & Leitner Spaced Repetition | Phase 4 | ✅ Done |
 | 5 | Ingestion Pipeline v1 (PDF → DB) | Phase 3 | ✅ Done |
 | 6 | Episodic Reader ("30-Day Book Gym") | Phase 3 + book-to-shortstories | ✅ Done |
-| 7 | Reading Room (Literature & History) | Phase 3–4 | ⬜ Not started |
+| 7 | Reading Room (Literature & History) | Phase 3–4 | ✅ Done |
 | 8 | Coding Sandbox + Logic & Systems | Phase 4 | ⬜ Not started |
 | 9 | Synthetic Seed Pipeline | blueprint.md §1 | ⬜ Not started |
 | 10 | Gamification & Packaging | Phase 5 | ⬜ Not started |

@@ -19,6 +19,11 @@ import type {
   EpisodicIngestReport,
   EpisodicIngestRequest
 } from '@shared/episodes-types';
+import type {
+  GradeResult,
+  ReadingPassageSummary,
+  ReadingSession
+} from '@shared/reading-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -59,6 +64,9 @@ export interface IpcServices {
   epFeed(request: { bookTitle: string }): { feed: DailyFeed };
   epFinish(request: { bookTitle: string }): { nextEpisodeNumber: number | null };
   epQuestions(request: { contentUuid: string }): { questions: EpisodeQuestion[] };
+  readPassages(): { passages: ReadingPassageSummary[] };
+  readStart(request: { uuid: string }): { session: ReadingSession };
+  readSubmit(request: { uuid: string; questionIndex: number; answer: string }): Promise<GradeResult>;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -115,5 +123,14 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
   );
   ipcMain.handle(IPC_CHANNELS.epQuestions, (_event, request: { contentUuid: string }) =>
     services.epQuestions(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.readPassages, () => services.readPassages());
+  ipcMain.handle(IPC_CHANNELS.readStart, (_event, request: { uuid: string }) =>
+    services.readStart(request)
+  );
+  ipcMain.handle(
+    IPC_CHANNELS.readSubmit,
+    (_event, request: { uuid: string; questionIndex: number; answer: string }) =>
+      services.readSubmit(request)
   );
 }

@@ -123,6 +123,22 @@ export function createContentPoolRepo(db: GymDatabase) {
         .all() as Omit<ContentPoolRow, 'passage_body'>[];
     },
 
+    /** Reading-room candidates: english/history passages with question counts. */
+    listReadingPassages(): (ContentPoolRow & { question_count: number })[] {
+      return db
+        .prepare(
+          `
+          SELECT c.*, COUNT(p.id) AS question_count
+          FROM content_pool c
+          LEFT JOIN interactive_prompts p ON p.content_pool_uuid = c.uuid
+          WHERE c.module IN ('english', 'history')
+          GROUP BY c.uuid
+          ORDER BY c.created_at DESC
+          `
+        )
+        .all() as (ContentPoolRow & { question_count: number })[];
+    },
+
     /** FK ON DELETE CASCADE removes the item's prompts with it. */
     deleteByUuid(uuid: string): boolean {
       return db.prepare('DELETE FROM content_pool WHERE uuid = ?').run(uuid).changes > 0;

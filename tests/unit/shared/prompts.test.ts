@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PROMPT_REGISTRY, getPromptTemplate, renderPrompt } from '@shared/prompts';
 
 describe('prompt registry', () => {
-  it('contains the five documented system prompts with unique ids', () => {
+  it('contains the six shipped system prompts with unique ids', () => {
     expect(PROMPT_REGISTRY.map((t) => t.id)).toMatchInlineSnapshot(`
       [
         "socratic-math",
@@ -10,6 +10,7 @@ describe('prompt registry', () => {
         "literary-compressor",
         "hint-tree-builder",
         "episodic-chunker",
+        "reading-grader",
       ]
     `);
     expect(new Set(PROMPT_REGISTRY.map((t) => t.id)).size).toBe(PROMPT_REGISTRY.length);
@@ -58,6 +59,16 @@ describe('ingestion prompt constraints', () => {
     const t = getPromptTemplate('episodic-chunker');
     expect(t.template).toContain('300 to 600 words');
     expect(t.template).toContain('Never cut off mid-sentence or mid-scene');
+  });
+});
+
+describe('reading grader guardrails (hints only, no answer key leakage)', () => {
+  it('grades against the solution vector but forbids revealing it', () => {
+    const t = getPromptTemplate('reading-grader');
+    expect(t.template).toContain('NEVER reveal, restate, or paraphrase the solution vector');
+    expect(t.template).toContain('exactly ONE guiding question');
+    expect(t.template).toContain('{"score": <integer 0-100>, "feedback"');
+    expect(t.placeholders).toEqual(['passage', 'question', 'solution_criteria', 'answer']);
   });
 });
 

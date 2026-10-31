@@ -14,7 +14,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 1 | Data Layer (SQLite + Migrations) | Phase 1 | ✅ Done |
 | 2 | Ollama Orchestration & Bake-Off Panel | Phase 2 | ✅ Done |
 | 3 | Socratic Math Module MVP | Phase 3 | ✅ Done |
-| 4 | Flashcards & Leitner Spaced Repetition | Phase 4 | ⬜ Not started |
+| 4 | Flashcards & Leitner Spaced Repetition | Phase 4 | ✅ Done |
 | 5 | Ingestion Pipeline v1 (PDF → DB) | Phase 3 | ⬜ Not started |
 | 6 | Episodic Reader ("30-Day Book Gym") | Phase 3 + book-to-shortstories | ⬜ Not started |
 | 7 | Reading Room (Literature & History) | Phase 3–4 | ⬜ Not started |

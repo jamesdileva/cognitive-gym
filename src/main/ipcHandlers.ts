@@ -7,6 +7,7 @@ import type {
   MathRevealResponse,
   MathTopicSummary
 } from '@shared/math-types';
+import type { DeckSummary, SrsCard, SrsGradeResult } from '@shared/srs-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -34,6 +35,10 @@ export interface IpcServices {
   mathCheckAnswer(request: { problem: MathProblem; answer: string }): MathCheckResponse;
   mathReveal(request: { problem: MathProblem }): MathRevealResponse;
   mathHint(request: { problem: MathProblem; userMessage: string }): Promise<MathHintResult>;
+  srsDecks(): { decks: DeckSummary[] };
+  srsDraw(request: { deckName: string }): { card: SrsCard | null };
+  srsReveal(request: { id: number }): { back: string };
+  srsGrade(request: { id: number; correct: boolean }): SrsGradeResult;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -59,5 +64,15 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
   );
   ipcMain.handle(IPC_CHANNELS.mathHint, (_event, request: { problem: MathProblem; userMessage: string }) =>
     services.mathHint(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.srsDecks, () => services.srsDecks());
+  ipcMain.handle(IPC_CHANNELS.srsDraw, (_event, request: { deckName: string }) =>
+    services.srsDraw(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.srsReveal, (_event, request: { id: number }) =>
+    services.srsReveal(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.srsGrade, (_event, request: { id: number; correct: boolean }) =>
+    services.srsGrade(request)
   );
 }

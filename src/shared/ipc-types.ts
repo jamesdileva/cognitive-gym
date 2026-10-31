@@ -25,7 +25,15 @@ export const IPC_CHANNELS = {
   /** Math module: user-initiated worked solution. */
   mathReveal: 'math:reveal',
   /** Math module: Socratic hint via the registry prompt. */
-  mathHint: 'math:hint'
+  mathHint: 'math:hint',
+  /** Flashcards: deck summaries with due counts. */
+  srsDecks: 'srs:decks',
+  /** Flashcards: draw the next due card (front only). */
+  srsDraw: 'srs:draw',
+  /** Flashcards: flip the card without grading. */
+  srsReveal: 'srs:reveal',
+  /** Flashcards: apply the Leitner transition for a self-graded review. */
+  srsGrade: 'srs:grade'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

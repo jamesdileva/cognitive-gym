@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
 import { join } from 'node:path';
 import { buildDbStatus } from './db/dbStatus';
 import { openDatabase } from './db/database';
+import { createFlashcardsRepo } from './db/repositories/flashcardsRepo';
 import { createUserProgressRepo } from './db/repositories/userProgressRepo';
 import { seedDevDataIfEmpty } from './db/seedDevData';
 import { registerIpcHandlers } from './ipcHandlers';
@@ -9,6 +10,7 @@ import { createAiEngineService } from './ollama/engine';
 import { OllamaClient, toAiResult } from './ollama/ollamaClient';
 import { createMathService } from './math/mathService';
 import { loadMathTemplates } from './math/templateLoader';
+import { createReviewService } from './srs/reviewService';
 
 const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
@@ -51,8 +53,9 @@ app.whenReady().then(() => {
   }
 
   const db = openDatabase(join(app.getPath('userData'), 'cognitive-gym.db'));
+  const appRoot = app.getAppPath();
   if (isDev()) {
-    seedDevDataIfEmpty(db);
+    seedDevDataIfEmpty(db, join(appRoot, 'content-library', 'flashcards'));
   }
 
   const ai = createAiEngineService(db, new OllamaClient());
@@ -62,6 +65,7 @@ app.whenReady().then(() => {
     progress: createUserProgressRepo(db),
     engine: ai
   });
+  const srs = createReviewService({ cards: createFlashcardsRepo(db) });
 
   registerIpcHandlers(ipcMain, {
     dbStatus: () => buildDbStatus(db),
@@ -72,7 +76,11 @@ app.whenReady().then(() => {
     mathNewProblem: (request) => ({ problem: math.newProblem(request.templateId) }),
     mathCheckAnswer: (request) => math.checkAnswer(request.problem, request.answer),
     mathReveal: (request) => math.reveal(request.problem),
-    mathHint: (request) => math.hint(request.problem, request.userMessage)
+    mathHint: (request) => math.hint(request.problem, request.userMessage),
+    srsDecks: () => ({ decks: srs.listDecks() }),
+    srsDraw: (request) => ({ card: srs.drawCard(request.deckName) }),
+    srsReveal: (request) => srs.revealCard(request.id),
+    srsGrade: (request) => srs.gradeCard(request.id, request.correct)
   });
 
   createWindow();

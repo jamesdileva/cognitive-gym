@@ -22,7 +22,12 @@ const api: GymApi = {
   mathReveal: (request: { problem: MathProblem }) =>
     ipcRenderer.invoke(IPC_CHANNELS.mathReveal, request),
   mathHint: (request: { problem: MathProblem; userMessage: string }) =>
-    ipcRenderer.invoke(IPC_CHANNELS.mathHint, request)
+    ipcRenderer.invoke(IPC_CHANNELS.mathHint, request),
+  srsDecks: () => ipcRenderer.invoke(IPC_CHANNELS.srsDecks),
+  srsDraw: (request: { deckName: string }) => ipcRenderer.invoke(IPC_CHANNELS.srsDraw, request),
+  srsReveal: (request: { id: number }) => ipcRenderer.invoke(IPC_CHANNELS.srsReveal, request),
+  srsGrade: (request: { id: number; correct: boolean }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.srsGrade, request)
 };
 
 contextBridge.exposeInMainWorld('api', api);

@@ -64,7 +64,8 @@ const api: GymApi = {
     ipcRenderer.invoke(IPC_CHANNELS.diagHint, request),
   synthStories: (request: { count: number }) =>
     ipcRenderer.invoke(IPC_CHANNELS.synthStories, request),
-  synthMath: (request: { count: number }) => ipcRenderer.invoke(IPC_CHANNELS.synthMath, request)
+  synthMath: (request: { count: number }) => ipcRenderer.invoke(IPC_CHANNELS.synthMath, request),
+  dashOverview: () => ipcRenderer.invoke(IPC_CHANNELS.dashOverview)
 };
 
 contextBridge.exposeInMainWorld('api', api);

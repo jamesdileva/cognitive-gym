@@ -1,0 +1,19 @@
+appId: dev.jamesdileva.cognitive-gym
+productName: Cognitive Gym
+directories:
+  output: release
+files:
+  - out/**
+  - content-library/**
+  - package.json
+# better-sqlite3 is a native module — must live outside the asar archive.
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+mac:
+  target: dmg
+  category: public.app-category.education

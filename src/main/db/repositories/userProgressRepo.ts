@@ -1,4 +1,5 @@
 import type { GymDatabase } from '../database';
+import { logActivity } from '../activityLog';
 
 export type ModuleType = 'math' | 'english' | 'history' | 'coding' | 'systems';
 
@@ -32,25 +33,29 @@ export function createUserProgressRepo(db: GymDatabase) {
   );
 
   return {
-    /** Records one attempt, creating the row on first sight of this item. */
+    /** Records one attempt (upsert + activity log in one transaction). */
     recordAttempt(input: RecordAttemptInput): UserProgressRow {
-      db.prepare(
-        `
-        INSERT INTO user_progress (module_type, content_item_id, total_attempts, successful_attempts, difficulty_rank, last_attempted_timestamp)
-        VALUES (?, ?, 1, ?, ?, ?)
-        ON CONFLICT (module_type, content_item_id) DO UPDATE SET
-          total_attempts = total_attempts + 1,
-          successful_attempts = successful_attempts + excluded.successful_attempts,
-          difficulty_rank = excluded.difficulty_rank,
-          last_attempted_timestamp = excluded.last_attempted_timestamp
-        `
-      ).run(
-        input.moduleType,
-        input.contentItemId,
-        input.successful ? 1 : 0,
-        input.difficultyRank ?? 1,
-        new Date().toISOString()
-      );
+      const write = db.transaction(() => {
+        db.prepare(
+          `
+          INSERT INTO user_progress (module_type, content_item_id, total_attempts, successful_attempts, difficulty_rank, last_attempted_timestamp)
+          VALUES (?, ?, 1, ?, ?, ?)
+          ON CONFLICT (module_type, content_item_id) DO UPDATE SET
+            total_attempts = total_attempts + 1,
+            successful_attempts = successful_attempts + excluded.successful_attempts,
+            difficulty_rank = excluded.difficulty_rank,
+            last_attempted_timestamp = excluded.last_attempted_timestamp
+          `
+        ).run(
+          input.moduleType,
+          input.contentItemId,
+          input.successful ? 1 : 0,
+          input.difficultyRank ?? 1,
+          new Date().toISOString()
+        );
+        logActivity(db, input.moduleType, input.contentItemId, input.successful);
+      });
+      write();
       return selectByItem.get(input.moduleType, input.contentItemId) as UserProgressRow;
     },
 

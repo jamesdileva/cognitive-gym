@@ -109,5 +109,20 @@ export const MIGRATIONS: Migration[] = [
       ALTER TABLE book_episodes ADD COLUMN content_uuid
         REFERENCES content_pool (uuid) ON DELETE SET NULL;
     `
+  },
+  {
+    version: 4,
+    name: 'activity-log-and-review-tracking',
+    up: `
+      CREATE TABLE attempt_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        module_type TEXT NOT NULL,
+        content_item_id TEXT NOT NULL,
+        successful INTEGER NOT NULL CHECK (successful IN (0, 1)),
+        created_at TIMESTAMP NOT NULL
+      );
+      CREATE INDEX idx_attempt_log_created ON attempt_log (created_at);
+      ALTER TABLE flashcards ADD COLUMN last_reviewed_at TIMESTAMP;
+    `
   }
 ];

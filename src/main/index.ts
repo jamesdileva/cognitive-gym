@@ -24,6 +24,7 @@ import { createMathService } from './math/mathService';
 import { loadMathTemplates, mergeMathTemplates } from './math/templateLoader';
 import { createReviewService } from './srs/reviewService';
 import { createSynthesisService } from './synthesis/synthesisService';
+import { createDashboardService } from './dashboard/dashboardService';
 
 const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
@@ -87,7 +88,9 @@ app.whenReady().then(() => {
     contentPool: createContentPoolRepo(db),
     mathTemplatesDir: generatedMathDir
   });
-  const srs = createReviewService({ cards: createFlashcardsRepo(db) });
+  const cards = createFlashcardsRepo(db);
+  const dashboard = createDashboardService({ db, cards });
+  const srs = createReviewService({ cards });
   const ingestion = createIngestionService({
     engine: ai,
     contentPool: createContentPoolRepo(db)
@@ -179,7 +182,8 @@ app.whenReady().then(() => {
     },
     synthStories: (request) =>
       synthesis.generateStories(request.count, emitIngestProgress),
-    synthMath: (request) => synthesis.generateMathTemplates(request.count, emitIngestProgress)
+    synthMath: (request) => synthesis.generateMathTemplates(request.count, emitIngestProgress),
+    dashOverview: () => dashboard.overview()
   });
 
   createWindow();

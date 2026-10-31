@@ -35,6 +35,7 @@ import type {
   SystemsCaseView
 } from './diagnostics-types';
 import type { SynthesisReport } from './synthesis-types';
+import type { DashboardOverview } from './dashboard-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -94,4 +95,5 @@ export interface GymApi {
   }): Promise<{ ok: true; hint: string } | { ok: false; failure: { kind: string; message: string } }>;
   synthStories(request: { count: number }): Promise<SynthesisReport>;
   synthMath(request: { count: number }): Promise<SynthesisReport>;
+  dashOverview(): Promise<DashboardOverview>;
 }

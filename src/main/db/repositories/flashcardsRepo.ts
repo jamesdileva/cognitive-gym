@@ -1,4 +1,5 @@
 import type { GymDatabase } from '../database';
+import { logActivity } from '../activityLog';
 
 export interface FlashcardRow {
   id: number;
@@ -7,6 +8,8 @@ export interface FlashcardRow {
   back_answer: string;
   leitner_box_position: number;
   next_review_due: string;
+  /** Stamp from the most recent Leitner transition (migration v4). */
+  last_reviewed_at: string | null;
 }
 
 export interface CreateFlashcardInput {
@@ -72,13 +75,15 @@ export function createFlashcardsRepo(db: GymDatabase) {
         .get(deckName, nowIso) as FlashcardRow | undefined;
     },
 
-    /** Persists a Leitner transition (box + scheduled due date). */
-    updateReviewState(id: number, box: number, nextReviewDueIso: string): void {
-      db.prepare('UPDATE flashcards SET leitner_box_position = ?, next_review_due = ? WHERE id = ?').run(
-        box,
-        nextReviewDueIso,
-        id
-      );
+    /** Persists a Leitner transition (box + schedule + review stamp + activity log). */
+    updateReviewState(id: number, box: number, nextReviewDueIso: string, correct?: boolean): void {
+      db.prepare(
+        'UPDATE flashcards SET leitner_box_position = ?, next_review_due = ?, last_reviewed_at = ? WHERE id = ?'
+      ).run(box, nextReviewDueIso, new Date().toISOString(), id);
+      if (correct !== undefined) {
+        const card = this.getById(id);
+        logActivity(db, 'srs', `card:${card?.deck_name ?? 'unknown'}`, correct);
+      }
     },
 
     listDecks(): { deck_name: string; card_count: number }[] {

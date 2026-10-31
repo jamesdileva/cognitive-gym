@@ -50,7 +50,7 @@ describe('registerIpcHandlers', () => {
   };
 
   const noopServices: IpcServices = {
-    dbStatus: () => ({ migrationVersion: 3, tableCounts: {}, totalRows: 0 }),
+    dbStatus: () => ({ migrationVersion: 4, tableCounts: {}, totalRows: 0 }),
     aiStatus: async () => ({ engine: 'qwen2.5:7b', models: [], ollamaAvailable: false }),
     aiSetEngine: async (model: string) => ({ engine: model }),
     aiGenerate: async (_request: AiGenerateRequest): Promise<AiResult> => ({
@@ -112,7 +112,8 @@ describe('registerIpcHandlers', () => {
       generated: 0,
       questionCount: 0,
       failures: []
-    })
+    }),
+    dashOverview: () => ({ dailyStreak: 0, dueCards: 0, modules: [], activity: [] })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -162,7 +163,8 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.diagSubmit,
       IPC_CHANNELS.diagHint,
       IPC_CHANNELS.synthStories,
-      IPC_CHANNELS.synthMath
+      IPC_CHANNELS.synthMath,
+      IPC_CHANNELS.dashOverview
     ]);
   });
 
@@ -189,7 +191,7 @@ describe('registerIpcHandlers', () => {
 
     const dbStatusHandler = handlers.get(IPC_CHANNELS.dbStatus) as () => unknown;
     expect(dbStatusHandler()).toEqual({
-      migrationVersion: 3,
+      migrationVersion: 4,
       tableCounts: {
         flashcards: 1,
         user_progress: 0,

@@ -35,6 +35,7 @@ import type {
   SystemsCaseView
 } from '@shared/diagnostics-types';
 import type { SynthesisReport } from '@shared/synthesis-types';
+import type { DashboardOverview } from '@shared/dashboard-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -85,6 +86,7 @@ export interface IpcServices {
   diagHint(request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }): Promise<{ ok: true; hint: string } | { ok: false; failure: { kind: string; message: string } }>;
   synthStories(request: { count: number }): Promise<SynthesisReport>;
   synthMath(request: { count: number }): Promise<SynthesisReport>;
+  dashOverview(): DashboardOverview;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -176,4 +178,5 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
   ipcMain.handle(IPC_CHANNELS.synthMath, (_event, request: { count: number }) =>
     services.synthMath(request)
   );
+  ipcMain.handle(IPC_CHANNELS.dashOverview, () => services.dashOverview());
 }

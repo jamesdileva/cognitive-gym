@@ -1,4 +1,5 @@
 import type { GymDatabase } from '../database';
+import { logActivity } from '../activityLog';
 
 export interface ReadingStreakRow {
   book_title: string;
@@ -26,7 +27,7 @@ export function createReadingStreaksRepo(db: GymDatabase) {
       return selectByBook.get(bookTitle) as ReadingStreakRow | undefined;
     },
 
-    /** Marks progress: moves to the next episode and stamps the read date. */
+    /** Marks progress: moves to the next episode, stamps the read date, logs activity. */
     advance(bookTitle: string): ReadingStreakRow {
       this.ensure(bookTitle);
       db.prepare(
@@ -36,6 +37,7 @@ export function createReadingStreaksRepo(db: GymDatabase) {
         WHERE book_title = ?
         `
       ).run(new Date().toISOString(), bookTitle);
+      logActivity(db, 'episodes', bookTitle, true);
       return selectByBook.get(bookTitle) as ReadingStreakRow;
     }
   };

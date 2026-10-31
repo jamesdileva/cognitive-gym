@@ -229,6 +229,46 @@ describe('bookEpisodesRepo', () => {
     expect(repo.deleteBook('Book A')).toBe(true);
     expect(repo.listEpisodes('Book A')).toHaveLength(0);
   });
+
+  it('persists recaps and content links (migration v3 columns)', () => {
+    const repo = createBookEpisodesRepo(db);
+    const pools = createContentPoolRepo(db);
+    const uuid = pools.insertWithPrompts({
+      module: 'english',
+      sourceType: 'user_ingested',
+      sourceTitle: 'linked',
+      passageBody: 'episode text',
+      prompts: []
+    });
+
+    repo.insertBook('Linked', [
+      {
+        episodeNumber: 1,
+        episodeTitle: 'The Harbor',
+        contentText: 'Text one.',
+        isCanonical: true,
+        episodeRecap: 'Previously: the fog arrived.',
+        contentUuid: uuid
+      },
+      { episodeNumber: 2, contentText: 'Text two.', isCanonical: true }
+    ]);
+
+    const first = repo.getEpisode('Linked', 1);
+    expect(first?.episodeRecap).toBe('Previously: the fog arrived.');
+    expect(first?.contentUuid).toBe(uuid);
+
+    const second = repo.getEpisode('Linked', 2);
+    expect(second?.episodeRecap).toBeNull();
+    expect(second?.contentUuid).toBeNull();
+    expect(repo.getEpisode('Linked', 9)).toBeUndefined();
+
+    expect(repo.bookTrack('Linked')).toBe(true);
+    expect(repo.bookTrack('Unknown')).toBeNull();
+
+    // ON DELETE SET NULL: the episode survives its question set.
+    pools.deleteByUuid(uuid);
+    expect(repo.getEpisode('Linked', 1)?.contentUuid).toBeNull();
+  });
 });
 
 describe('readingStreaksRepo', () => {

@@ -2,11 +2,14 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron';
 import { join } from 'node:path';
 import { buildDbStatus } from './db/dbStatus';
 import { openDatabase } from './db/database';
+import { createBookEpisodesRepo } from './db/repositories/bookEpisodesRepo';
 import { createContentPoolRepo } from './db/repositories/contentPoolRepo';
 import { createFlashcardsRepo } from './db/repositories/flashcardsRepo';
+import { createReadingStreaksRepo } from './db/repositories/readingStreaksRepo';
 import { createUserProgressRepo } from './db/repositories/userProgressRepo';
 import { seedDevDataIfEmpty } from './db/seedDevData';
 import { createIngestionService } from './ingestion/ingestionService';
+import { createEpisodeService } from './episodes/episodeService';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 import type { IngestProgress } from '@shared/ingestion-types';
 import { registerIpcHandlers } from './ipcHandlers';
@@ -74,6 +77,12 @@ app.whenReady().then(() => {
     engine: ai,
     contentPool: createContentPoolRepo(db)
   });
+  const episodes = createEpisodeService({
+    engine: ai,
+    bookEpisodes: createBookEpisodesRepo(db),
+    contentPool: createContentPoolRepo(db),
+    streaks: createReadingStreaksRepo(db)
+  });
 
   /** Native file picker for the ingestion pipeline. */
   const selectBookFile = async (): Promise<{ path: string | null }> => {
@@ -109,7 +118,23 @@ app.whenReady().then(() => {
       return ingestion.run(request.path, { maxChunks: request.maxChunks, onProgress });
     },
     ingestLibrary: () => ({ sources: ingestion.listLibrary() }),
-    ingestDelete: (request) => ({ deleted: ingestion.deleteSource(request.sourceTitle) })
+    ingestDelete: (request) => ({ deleted: ingestion.deleteSource(request.sourceTitle) }),
+    epIngest: async (request) => {
+      const onProgress = (progress: IngestProgress): void => {
+        for (const window of BrowserWindow.getAllWindows()) {
+          window.webContents.send(IPC_CHANNELS.ingestProgress, progress);
+        }
+      };
+      return episodes.run(request.path, {
+        isCanonical: request.isCanonical,
+        maxEpisodes: request.maxEpisodes,
+        onProgress
+      });
+    },
+    epTracks: () => ({ tracks: episodes.listTracks() }),
+    epFeed: (request) => ({ feed: episodes.getDailyFeed(request.bookTitle) }),
+    epFinish: (request) => episodes.finishEpisode(request.bookTitle),
+    epQuestions: (request) => ({ questions: episodes.getEpisodeQuestions(request.contentUuid) })
   });
 
   createWindow();

@@ -100,5 +100,14 @@ export const MIGRATIONS: Migration[] = [
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `
+  },
+  {
+    version: 3,
+    name: 'episode-recaps-and-questions',
+    up: `
+      ALTER TABLE book_episodes ADD COLUMN episode_recap TEXT;
+      ALTER TABLE book_episodes ADD COLUMN content_uuid
+        REFERENCES content_pool (uuid) ON DELETE SET NULL;
+    `
   }
 ];

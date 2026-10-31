@@ -12,6 +12,13 @@ import type {
   IngestionReport,
   IngestedSourceSummary
 } from '@shared/ingestion-types';
+import type {
+  DailyFeed,
+  EpisodeQuestion,
+  EpisodeTrack,
+  EpisodicIngestReport,
+  EpisodicIngestRequest
+} from '@shared/episodes-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -47,6 +54,11 @@ export interface IpcServices {
   ingestRun(request: { path: string; maxChunks?: number }): Promise<IngestionReport>;
   ingestLibrary(): { sources: IngestedSourceSummary[] };
   ingestDelete(request: { sourceTitle: string }): { deleted: boolean };
+  epIngest(request: EpisodicIngestRequest): Promise<EpisodicIngestReport>;
+  epTracks(): { tracks: EpisodeTrack[] };
+  epFeed(request: { bookTitle: string }): { feed: DailyFeed };
+  epFinish(request: { bookTitle: string }): { nextEpisodeNumber: number | null };
+  epQuestions(request: { contentUuid: string }): { questions: EpisodeQuestion[] };
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -90,5 +102,18 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
   ipcMain.handle(IPC_CHANNELS.ingestLibrary, () => services.ingestLibrary());
   ipcMain.handle(IPC_CHANNELS.ingestDelete, (_event, request: { sourceTitle: string }) =>
     services.ingestDelete(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.epIngest, (_event, request: EpisodicIngestRequest) =>
+    services.epIngest(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.epTracks, () => services.epTracks());
+  ipcMain.handle(IPC_CHANNELS.epFeed, (_event, request: { bookTitle: string }) =>
+    services.epFeed(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.epFinish, (_event, request: { bookTitle: string }) =>
+    services.epFinish(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.epQuestions, (_event, request: { contentUuid: string }) =>
+    services.epQuestions(request)
   );
 }

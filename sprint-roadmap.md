@@ -16,7 +16,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 3 | Socratic Math Module MVP | Phase 3 | ✅ Done |
 | 4 | Flashcards & Leitner Spaced Repetition | Phase 4 | ✅ Done |
 | 5 | Ingestion Pipeline v1 (PDF → DB) | Phase 3 | ✅ Done |
-| 6 | Episodic Reader ("30-Day Book Gym") | Phase 3 + book-to-shortstories | ⬜ Not started |
+| 6 | Episodic Reader ("30-Day Book Gym") | Phase 3 + book-to-shortstories | ✅ Done |
 | 7 | Reading Room (Literature & History) | Phase 3–4 | ⬜ Not started |
 | 8 | Coding Sandbox + Logic & Systems | Phase 4 | ⬜ Not started |
 | 9 | Synthetic Seed Pipeline | blueprint.md §1 | ⬜ Not started |
@@ -177,6 +177,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 - **Copyrighted test book** → extraction is exercised manually on the local PDF; committed fixtures are synthetic/public-domain only.
 - **Ollama may not be running during dev** → every AI-dependent test uses mocks; real-model checks are explicit manual steps.
 - **better-sqlite3 is a native module** → pinned to the Electron ABI via rebuild step documented in Sprint 0.
+- **Book front matter produces junk chunks** (real-book E2E finding, Sprint 6) → the chunker tops up below-minimum chunks from the next unit at sentence boundaries instead of flushing small ones.
 
 ## Post-v0.1 Backlog (not scheduled)
 

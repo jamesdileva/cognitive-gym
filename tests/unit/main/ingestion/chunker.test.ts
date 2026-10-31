@@ -102,6 +102,31 @@ describe('chunkParagraphs (reading blocks)', () => {
     expect(countWords(last)).toBeLessThanOrEqual(MAX_CHUNK_WORDS + MAX_CHUNK_WORDS / 2);
   });
 
+  it('tops up below-minimum chunks instead of emitting small ones (front-matter regression)', () => {
+    // Real-book shape found in E2E: tiny front-matter paragraphs followed by
+    // long narrative paragraphs. The old flush-on-overflow produced a 168-word
+    // chunk; the chunker must top it up from the next unit instead.
+    const frontMatter = [
+      'Wolves of the Test Valley.',
+      'A synthetic novel.',
+      'Copyright the test workshop. All rights reserved under every treaty.',
+      'For the surveyors.',
+      'With thanks to the harbor crew.',
+      'Begin again.'
+    ];
+    const narrative = makeCorpus(10, 42); // ~40-90 word paragraphs
+    const chunks = chunkParagraphs([...frontMatter, ...narrative]);
+
+    const wordCounts = chunks.map(countWords);
+    for (const [index, count] of wordCounts.entries()) {
+      const isLast = index === wordCounts.length - 1;
+      if (!isLast) expect(count).toBeGreaterThanOrEqual(MIN_CHUNK_WORDS);
+    }
+    // Reassembly still holds: no text added or lost.
+    const reassembled = chunks.flatMap((chunk) => chunk.split('\n\n'));
+    expect(reassembled).toEqual([...frontMatter, ...narrative]);
+  });
+
   it('is deterministic for the same input', () => {
     const corpus = makeCorpus(18, 555);
     expect(chunkParagraphs(corpus)).toEqual(chunkParagraphs(corpus));

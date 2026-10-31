@@ -43,7 +43,17 @@ export const IPC_CHANNELS = {
   /** Ingestion: delete an ingested source and its prompts (FK cascade). */
   ingestDelete: 'ingest:delete',
   /** Ingestion: main→renderer progress events during a run. */
-  ingestProgress: 'ingest:progress'
+  ingestProgress: 'ingest:progress',
+  /** Episodes: ingest a book file as an episode track (long-running). */
+  epIngest: 'ep:ingest',
+  /** Episodes: list tracks with streak progress. */
+  epTracks: 'ep:tracks',
+  /** Episodes: today's feed entry for a track. */
+  epFeed: 'ep:feed',
+  /** Episodes: mark today's episode read (advances the streak). */
+  epFinish: 'ep:finish',
+  /** Episodes: comprehension questions linked to an episode. */
+  epQuestions: 'ep:questions'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

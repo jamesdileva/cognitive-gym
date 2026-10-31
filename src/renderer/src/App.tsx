@@ -5,13 +5,15 @@ import FlashcardsView from './views/FlashcardsView';
 import HomeView from './views/HomeView';
 import LibraryView from './views/LibraryView';
 import MathView from './views/MathView';
+import ReaderView from './views/ReaderView';
 
-type ViewId = 'home' | 'math' | 'srs' | 'library' | 'bakeoff';
+type ViewId = 'home' | 'math' | 'srs' | 'reader' | 'library' | 'bakeoff';
 
 const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'math', label: 'Math Gym' },
   { id: 'srs', label: 'Flashcards' },
+  { id: 'reader', label: 'Daily Read' },
   { id: 'library', label: 'Library' },
   { id: 'bakeoff', label: 'AI Bake-Off' }
 ];
@@ -40,6 +42,7 @@ export default function App(): JSX.Element {
       {view === 'home' && <HomeView />}
       {view === 'math' && <MathView />}
       {view === 'srs' && <FlashcardsView />}
+      {view === 'reader' && <ReaderView />}
       {view === 'library' && <LibraryView />}
       {view === 'bakeoff' && <BakeOffView />}
     </div>

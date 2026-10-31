@@ -48,10 +48,32 @@ export function splitAtSentenceBoundaries(text: string, maxWords: number): strin
 }
 
 /**
- * Builds reading chunks from paragraphs. Greedy accumulation to MIN; a
- * paragraph that would push past MAX is deferred to the next chunk; oversized
- * paragraphs are split at sentence boundaries. The trailing remainder is
- * merged into the last chunk (bounded overshoot) when possible.
+ * Splits text at a word budget along sentence boundaries.
+ * Returns [fit, rest]; `fit` may be empty when a single sentence exceeds the
+ * whole budget (callers then flush and start a fresh chunk).
+ */
+export function splitAtWordBudget(text: string, budget: number): [string, string] {
+  if (budget <= 0) return ['', text];
+  const fit: string[] = [];
+  let fitWords = 0;
+  const sentences = splitSentences(text);
+  for (const [index, sentence] of sentences.entries()) {
+    const words = countWords(sentence);
+    if (fitWords + words > budget) {
+      return [fit.join(' '), sentences.slice(index).join(' ')];
+    }
+    fit.push(sentence);
+    fitWords += words;
+  }
+  return [fit.join(' '), ''];
+}
+
+/**
+ * Builds reading chunks from paragraphs. Greedy accumulation to MIN; when the
+ * next unit would overflow a below-minimum chunk (e.g. short front matter
+ * followed by long narrative paragraphs), the unit is split at sentence
+ * boundaries to top the chunk up instead of emitting a small one. The trailing
+ * remainder is merged into the last chunk (bounded overshoot) when possible.
  */
 export function chunkParagraphs(paragraphs: string[], minWords = MIN_CHUNK_WORDS, maxWords = MAX_CHUNK_WORDS): string[] {
   // Normalize input: split any paragraph already exceeding the max.
@@ -77,12 +99,32 @@ export function chunkParagraphs(paragraphs: string[], minWords = MIN_CHUNK_WORDS
   };
 
   for (const unit of units) {
-    const words = countWords(unit);
-    if (currentWords > 0 && currentWords + words > maxWords) {
-      flush();
+    let rest: string | null = unit;
+    while (rest !== null) {
+      const unitWords = countWords(rest);
+      const budget = maxWords - currentWords;
+      if (unitWords <= budget) {
+        current.push(rest);
+        currentWords += unitWords;
+        rest = null;
+      } else {
+        const [fit, remainder] = splitAtWordBudget(rest, budget);
+        if (fit === '' && currentWords === 0) {
+          // A single sentence longer than the whole budget: keep it whole
+          // (never cut mid-sentence) and accept the overshoot.
+          current.push(rest);
+          currentWords += unitWords;
+          rest = null;
+        } else {
+          if (fit !== '') {
+            current.push(fit);
+            currentWords += countWords(fit);
+          }
+          flush();
+          rest = remainder;
+        }
+      }
     }
-    current.push(unit);
-    currentWords += words;
     if (currentWords >= minWords) {
       flush();
     }

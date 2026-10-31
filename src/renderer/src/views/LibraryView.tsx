@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import type { JSX } from 'react';
 import { useIngestion } from '../hooks/useIngestion';
 
 export default function LibraryView(): JSX.Element {
   const { sources, running, progress, report, error, selectAndRun, remove } = useIngestion();
+  const [chunkLimit, setChunkLimit] = useState('');
+
+  const limit = chunkLimit.trim() === '' ? undefined : Math.max(1, Number.parseInt(chunkLimit, 10) || 1);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-6">
@@ -13,13 +17,25 @@ export default function LibraryView(): JSX.Element {
             Ingest personal books into local reading exercises (PDF · EPUB · TXT)
           </p>
         </div>
-        <button
-          className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={running}
-          onClick={() => void selectAndRun()}
-        >
-          {running ? 'Ingesting…' : '+ Ingest a book'}
-        </button>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1 text-xs text-zinc-500">
+            chunks
+            <input
+              className="w-16 rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-200"
+              placeholder="all"
+              value={chunkLimit}
+              disabled={running}
+              onChange={(event) => setChunkLimit(event.target.value.replace(/\D/g, ''))}
+            />
+          </label>
+          <button
+            className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={running}
+            onClick={() => void selectAndRun(limit)}
+          >
+            {running ? 'Ingesting…' : '+ Ingest a book'}
+          </button>
+        </div>
       </header>
 
       {running && (

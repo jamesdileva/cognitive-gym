@@ -8,6 +8,10 @@ import type {
   MathTopicSummary
 } from '@shared/math-types';
 import type { DeckSummary, SrsCard, SrsGradeResult } from '@shared/srs-types';
+import type {
+  IngestionReport,
+  IngestedSourceSummary
+} from '@shared/ingestion-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -39,6 +43,10 @@ export interface IpcServices {
   srsDraw(request: { deckName: string }): { card: SrsCard | null };
   srsReveal(request: { id: number }): { back: string };
   srsGrade(request: { id: number; correct: boolean }): SrsGradeResult;
+  ingestSelectFile(): Promise<{ path: string | null }>;
+  ingestRun(request: { path: string; maxChunks?: number }): Promise<IngestionReport>;
+  ingestLibrary(): { sources: IngestedSourceSummary[] };
+  ingestDelete(request: { sourceTitle: string }): { deleted: boolean };
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -74,5 +82,13 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
   );
   ipcMain.handle(IPC_CHANNELS.srsGrade, (_event, request: { id: number; correct: boolean }) =>
     services.srsGrade(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.ingestSelectFile, () => services.ingestSelectFile());
+  ipcMain.handle(IPC_CHANNELS.ingestRun, (_event, request: { path: string; maxChunks?: number }) =>
+    services.ingestRun(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.ingestLibrary, () => services.ingestLibrary());
+  ipcMain.handle(IPC_CHANNELS.ingestDelete, (_event, request: { sourceTitle: string }) =>
+    services.ingestDelete(request)
   );
 }

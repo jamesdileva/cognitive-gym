@@ -7,6 +7,11 @@ import type {
   MathTopicSummary
 } from './math-types';
 import type { DeckSummary, SrsCard, SrsGradeResult } from './srs-types';
+import type {
+  IngestProgress,
+  IngestionReport,
+  IngestedSourceSummary
+} from './ingestion-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -29,4 +34,10 @@ export interface GymApi {
   srsDraw(request: { deckName: string }): Promise<{ card: SrsCard | null }>;
   srsReveal(request: { id: number }): Promise<{ back: string }>;
   srsGrade(request: { id: number; correct: boolean }): Promise<SrsGradeResult>;
+  ingestSelectFile(): Promise<{ path: string | null }>;
+  ingestRun(request: { path: string; maxChunks?: number }): Promise<IngestionReport>;
+  ingestLibrary(): Promise<{ sources: IngestedSourceSummary[] }>;
+  ingestDelete(request: { sourceTitle: string }): Promise<{ deleted: boolean }>;
+  /** Subscribes to main→renderer progress events; returns an unsubscribe fn. */
+  onIngestProgress(callback: (progress: IngestProgress) => void): () => void;
 }

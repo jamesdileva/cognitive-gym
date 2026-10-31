@@ -33,7 +33,17 @@ export const IPC_CHANNELS = {
   /** Flashcards: flip the card without grading. */
   srsReveal: 'srs:reveal',
   /** Flashcards: apply the Leitner transition for a self-graded review. */
-  srsGrade: 'srs:grade'
+  srsGrade: 'srs:grade',
+  /** Ingestion: open the native file picker (pdf/epub/txt). */
+  ingestSelectFile: 'ingest:select-file',
+  /** Ingestion: run the full pipeline on a file (long-running). */
+  ingestRun: 'ingest:run',
+  /** Ingestion: list ingested sources with chunk/question counts. */
+  ingestLibrary: 'ingest:library',
+  /** Ingestion: delete an ingested source and its prompts (FK cascade). */
+  ingestDelete: 'ingest:delete',
+  /** Ingestion: main→renderer progress events during a run. */
+  ingestProgress: 'ingest:progress'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

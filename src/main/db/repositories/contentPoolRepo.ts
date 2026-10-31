@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { IngestedSourceSummary } from '@shared/ingestion-types';
 import type { GymDatabase } from '../database';
 
 export type ContentModule = 'math' | 'english' | 'coding' | 'history' | 'logic';
@@ -125,6 +126,32 @@ export function createContentPoolRepo(db: GymDatabase) {
     /** FK ON DELETE CASCADE removes the item's prompts with it. */
     deleteByUuid(uuid: string): boolean {
       return db.prepare('DELETE FROM content_pool WHERE uuid = ?').run(uuid).changes > 0;
+    },
+
+    /** Library summaries grouped by source (book) for one source type. */
+    listSourceSummaries(sourceType: SourceType): IngestedSourceSummary[] {
+      return db
+        .prepare(
+          `
+          SELECT c.source_title AS sourceTitle,
+                 COUNT(DISTINCT c.uuid) AS chunkCount,
+                 COUNT(p.id) AS questionCount,
+                 MIN(c.created_at) AS createdAt
+          FROM content_pool c
+          LEFT JOIN interactive_prompts p ON p.content_pool_uuid = c.uuid
+          WHERE c.source_type = ?
+          GROUP BY c.source_title
+          ORDER BY createdAt DESC
+          `
+        )
+        .all(sourceType) as IngestedSourceSummary[];
+    },
+
+    /** Deletes every chunk (and, by cascade, every prompt) of one source. */
+    deleteBySource(sourceTitle: string, sourceType: SourceType): number {
+      return db
+        .prepare('DELETE FROM content_pool WHERE source_title = ? AND source_type = ?')
+        .run(sourceTitle, sourceType).changes;
     }
   };
 }

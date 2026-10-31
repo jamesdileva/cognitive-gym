@@ -3,14 +3,16 @@ import type { JSX } from 'react';
 import BakeOffView from './views/BakeOffView';
 import FlashcardsView from './views/FlashcardsView';
 import HomeView from './views/HomeView';
+import LibraryView from './views/LibraryView';
 import MathView from './views/MathView';
 
-type ViewId = 'home' | 'math' | 'srs' | 'bakeoff';
+type ViewId = 'home' | 'math' | 'srs' | 'library' | 'bakeoff';
 
 const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'math', label: 'Math Gym' },
   { id: 'srs', label: 'Flashcards' },
+  { id: 'library', label: 'Library' },
   { id: 'bakeoff', label: 'AI Bake-Off' }
 ];
 
@@ -38,6 +40,7 @@ export default function App(): JSX.Element {
       {view === 'home' && <HomeView />}
       {view === 'math' && <MathView />}
       {view === 'srs' && <FlashcardsView />}
+      {view === 'library' && <LibraryView />}
       {view === 'bakeoff' && <BakeOffView />}
     </div>
   );

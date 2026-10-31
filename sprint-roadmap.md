@@ -15,7 +15,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 2 | Ollama Orchestration & Bake-Off Panel | Phase 2 | ✅ Done |
 | 3 | Socratic Math Module MVP | Phase 3 | ✅ Done |
 | 4 | Flashcards & Leitner Spaced Repetition | Phase 4 | ✅ Done |
-| 5 | Ingestion Pipeline v1 (PDF → DB) | Phase 3 | ⬜ Not started |
+| 5 | Ingestion Pipeline v1 (PDF → DB) | Phase 3 | ✅ Done |
 | 6 | Episodic Reader ("30-Day Book Gym") | Phase 3 + book-to-shortstories | ⬜ Not started |
 | 7 | Reading Room (Literature & History) | Phase 3–4 | ⬜ Not started |
 | 8 | Coding Sandbox + Logic & Systems | Phase 4 | ⬜ Not started |
@@ -101,9 +101,9 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 **Goal:** Turn a local PDF/EPUB/TXT into structured, question-bearing content in SQLite.
 
 **Scope & plan:**
-- File picker → structural extraction (strip headers/footers, chapter detection via typography) with `pdf` parsing lib.
-- Chunking engine: 300–600 word reading blocks, paragraph-edge safe, never mid-sentence (book-to-shortstories.md rules); larger 1500-token windows for distillation input.
-- Distillation step via Ollama (Literary Compressor & Evaluator prompt): 3 comprehension questions + solution vectors; strict JSON validation with bounded retry, then write to `content_pool` / `interactive_prompts`.
+- File picker → structural extraction (strip headers/footers, chapter detection via typography) with `pdf` parsing lib (unpdf; EPUB via adm-zip spine walk).
+- Chunking engine: 300–600 word reading blocks, paragraph-edge safe, never mid-sentence (book-to-shortstories.md rules). Deviation: distillation consumes the reading chunks directly — the doc's separate 1500-token windowing pass was redundant, so it was dropped (one chunking pass instead).
+- Distillation step via Ollama (Literary Compressor & Evaluator prompt): 3 comprehension questions + solution vectors; strict JSON validation with bounded retry, then write to `content_pool` / `interactive_prompts`. The model's `content_chunk` is validated but never stored — the pipeline's own chunk is (untrusted-output rule).
 - Ingestion progress UI + library management (list/reingest/delete ingested books).
 
 **Verify:** extraction unit tests on committed public-domain fixture; chunk-boundary tests (property-based: no chunk ends mid-sentence); distillation contract tests with mocked LLM incl. malformed-JSON retry path; **manual end-to-end run on the root PDF** (results stay local).

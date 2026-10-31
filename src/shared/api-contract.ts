@@ -25,6 +25,15 @@ import type {
   ReadingPassageSummary,
   ReadingSession
 } from './reading-types';
+import type {
+  CodingProblemView,
+  DiagnosticsKind,
+  DiagnosticsListItem,
+  DiagnosticsSubmitResult,
+  LogicPuzzleView,
+  LogicRow,
+  SystemsCaseView
+} from './diagnostics-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -67,4 +76,19 @@ export interface GymApi {
     questionIndex: number;
     answer: string;
   }): Promise<GradeResult>;
+  diagContent(request: { kind: DiagnosticsKind }): Promise<{ items: DiagnosticsListItem[] }>;
+  diagOpen(request: {
+    kind: DiagnosticsKind;
+    id: string;
+  }): Promise<{ item: CodingProblemView | LogicPuzzleView | SystemsCaseView }>;
+  diagSubmit(request: {
+    kind: DiagnosticsKind;
+    id: string;
+    answer: string | LogicRow[];
+  }): Promise<DiagnosticsSubmitResult>;
+  diagHint(request: {
+    kind: DiagnosticsKind;
+    id: string;
+    answer: string | LogicRow[];
+  }): Promise<{ ok: true; hint: string } | { ok: false; failure: { kind: string; message: string } }>;
 }

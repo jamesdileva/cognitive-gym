@@ -1,0 +1,7 @@
+{
+  "case_id": "systems_upstream_502_01",
+  "title": "The 502 That Wasn't the Router's Fault",
+  "goal": "Diagnose why GET /api/report returns 502 and propose the next operational step.",
+  "log_text": "2026-10-30T09:14:01Z app[web.1]: GET /api/report 200 41ms\n2026-10-30T09:15:22Z app[worker.1]: job queue depth=4123 (warning threshold 500)\n2026-10-30T09:15:40Z router: upstreamtimeout connecting to web.3 after 30000ms\n2026-10-30T09:15:40Z router: GET /api/report -> 502\n2026-10-30T09:16:02Z app[web.3]: event loop blocked 61000ms\n2026-10-30T09:16:02Z app[web.3]: heap_in_use=1.97gb heap_limit=2.00gb",
+  "diagnosis_criteria": "Must identify that web.3's event loop was blocked for 61s (with heap at 1.97/2.00gb), so the router's 30s upstream timeout fired and produced the 502 — the failure is in web.3, not the router. The 4123-deep worker queue is a separate symptom, not this request's cause. Next step must involve capturing diagnostics or restarting web.3 and moving the blocking/heap-heavy work out of the request path (or scaling it), not reconfiguring the router."
+}

@@ -25,6 +25,15 @@ import type {
   ReadingPassageSummary,
   ReadingSession
 } from '@shared/reading-types';
+import type {
+  CodingProblemView,
+  DiagnosticsKind,
+  DiagnosticsListItem,
+  DiagnosticsSubmitResult,
+  LogicPuzzleView,
+  LogicRow,
+  SystemsCaseView
+} from '@shared/diagnostics-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -69,6 +78,10 @@ export interface IpcServices {
   readPassages(): { passages: ReadingPassageSummary[] };
   readStart(request: { uuid: string }): { session: ReadingSession };
   readSubmit(request: { uuid: string; questionIndex: number; answer: string }): Promise<GradeResult>;
+  diagContent(request: { kind: DiagnosticsKind }): { items: DiagnosticsListItem[] };
+  diagOpen(request: { kind: DiagnosticsKind; id: string }): { item: CodingProblemView | LogicPuzzleView | SystemsCaseView };
+  diagSubmit(request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }): Promise<DiagnosticsSubmitResult> | DiagnosticsSubmitResult;
+  diagHint(request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }): Promise<{ ok: true; hint: string } | { ok: false; failure: { kind: string; message: string } }>;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -137,5 +150,21 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
     IPC_CHANNELS.readSubmit,
     (_event, request: { uuid: string; questionIndex: number; answer: string }) =>
       services.readSubmit(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.diagContent, (_event, request: { kind: DiagnosticsKind }) =>
+    services.diagContent(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.diagOpen, (_event, request: { kind: DiagnosticsKind; id: string }) =>
+    services.diagOpen(request)
+  );
+  ipcMain.handle(
+    IPC_CHANNELS.diagSubmit,
+    (_event, request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }) =>
+      services.diagSubmit(request)
+  );
+  ipcMain.handle(
+    IPC_CHANNELS.diagHint,
+    (_event, request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }) =>
+      services.diagHint(request)
   );
 }

@@ -1,0 +1,8 @@
+{
+  "problem_id": "coding_closure_scope_01",
+  "title": "Three Counters, One Value",
+  "language": "javascript",
+  "goal": "buildCounters should return functions producing 0, 10, and 20 — but every function returns 20.",
+  "code": "function buildCounters() {\n  const counters = [];\n  for (var i = 0; i < 3; i++) {\n    counters.push(() => i * 10);\n  }\n  return counters;\n}\n\n// expected: [0, 10, 20]\n// actual:   [20, 20, 20]",
+  "bug_criteria": "Must identify variable scope pollution: var is function-scoped, so all three closures capture the SAME binding i, which is 3 after the loop ends. The fix is let (per-iteration block scope) — or capturing the value in an IIFE."
+}

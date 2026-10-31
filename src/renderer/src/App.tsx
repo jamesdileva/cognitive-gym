@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { JSX } from 'react';
 import BakeOffView from './views/BakeOffView';
+import DiagnosticsView from './views/DiagnosticsView';
 import FlashcardsView from './views/FlashcardsView';
 import HomeView from './views/HomeView';
 import LibraryView from './views/LibraryView';
@@ -8,7 +9,7 @@ import MathView from './views/MathView';
 import ReaderView from './views/ReaderView';
 import ReadingRoomView from './views/ReadingRoomView';
 
-type ViewId = 'home' | 'math' | 'srs' | 'reader' | 'room' | 'library' | 'bakeoff';
+type ViewId = 'home' | 'math' | 'srs' | 'reader' | 'room' | 'diag' | 'library' | 'bakeoff';
 
 const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'home', label: 'Home' },
@@ -16,6 +17,7 @@ const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'srs', label: 'Flashcards' },
   { id: 'reader', label: 'Daily Read' },
   { id: 'room', label: 'Reading Room' },
+  { id: 'diag', label: 'Diagnostics' },
   { id: 'library', label: 'Library' },
   { id: 'bakeoff', label: 'AI Bake-Off' }
 ];
@@ -46,6 +48,7 @@ export default function App(): JSX.Element {
       {view === 'srs' && <FlashcardsView />}
       {view === 'reader' && <ReaderView />}
       {view === 'room' && <ReadingRoomView />}
+      {view === 'diag' && <DiagnosticsView />}
       {view === 'library' && <LibraryView />}
       {view === 'bakeoff' && <BakeOffView />}
     </div>

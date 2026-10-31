@@ -1,0 +1,20 @@
+{
+  "puzzle_id": "logic_harbor_01",
+  "title": "The Harbor Keepers",
+  "categories": {
+    "Keeper": ["Ines", "Bram", "Sol"],
+    "Pet": ["heron", "cat", "eel"],
+    "Lamp": ["red", "blue", "green"]
+  },
+  "clues": [
+    "Ines keeps the heron.",
+    "Bram's lamp is not red.",
+    "The keeper of the eel hangs a green lamp.",
+    "Sol does not keep the cat."
+  ],
+  "solution": [
+    { "Keeper": "Ines", "Pet": "heron", "Lamp": "red" },
+    { "Keeper": "Bram", "Pet": "cat", "Lamp": "blue" },
+    { "Keeper": "Sol", "Pet": "eel", "Lamp": "green" }
+  ]
+}

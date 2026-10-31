@@ -61,7 +61,15 @@ export const IPC_CHANNELS = {
   /** Reading Room: open a passage session (criteria stay main-side). */
   readStart: 'read:start',
   /** Reading Room: submit a free-text answer for semantic grading. */
-  readSubmit: 'read:submit'
+  readSubmit: 'read:submit',
+  /** Diagnostics rooms: list items for a kind (coding/logic/systems). */
+  diagContent: 'diag:content',
+  /** Diagnostics rooms: open one item (solutions stay main-side). */
+  diagOpen: 'diag:open',
+  /** Diagnostics rooms: submit an answer/board for checking or grading. */
+  diagSubmit: 'diag:submit',
+  /** Diagnostics rooms: hint ladder (coding) / contradiction alert (logic). */
+  diagHint: 'diag:hint'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

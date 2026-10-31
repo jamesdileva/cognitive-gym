@@ -1,0 +1,7 @@
+{
+  "case_id": "systems_backup_full_01",
+  "title": "Nightly Backups Started Failing",
+  "goal": "Diagnose why the nightly backup fails and propose the fix.",
+  "log_text": "2026-10-30T02:00:01Z cron[812]: backup.sh started\n2026-10-30T02:00:04Z backup.sh: rsync: write failed on \"/mnt/backup/snapshot.img\": No space left on device (28)\n2026-10-30T02:00:04Z backup.sh: rsync error: error in file IO (code 11)\n2026-10-30T02:00:05Z cron[812]: backup.sh exited 1\n2026-10-30T03:10:00Z systemd[1]: mnt-backup.mount: Mount process exited, status=1\n2026-10-30T03:10:00Z kernel: EXT4-fs warning (device sdb1): ext4_end_bio:344: I/O error writing to inode 812",
+  "diagnosis_criteria": "Must identify that the destination filesystem is full: rsync failed with 'No space left on device (28)' while writing to /mnt/backup, and the later mount/ext4 errors on sdb1 are downstream noise from the same full volume. The fix must involve freeing space or expanding the volume (e.g. prune old snapshots — retention), not fixing rsync syntax or the cron schedule."
+}

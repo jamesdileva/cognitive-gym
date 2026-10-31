@@ -5,6 +5,7 @@ import { createFlashcardsRepo } from '@main/db/repositories/flashcardsRepo';
 import { handlePing, registerIpcHandlers, type IpcServices } from '@main/ipcHandlers';
 import type { AiGenerateRequest, AiResult, AiStatusResponse } from '@shared/ai-types';
 import type { MathHintResult, MathProblem, MathTopicSummary } from '@shared/math-types';
+import type { DeckSummary } from '@shared/srs-types';
 import { IPC_CHANNELS } from '@shared/ipc-types';
 
 describe('handlePing', () => {
@@ -42,7 +43,11 @@ describe('registerIpcHandlers', () => {
     mathNewProblem: () => ({ problem: sampleProblem }),
     mathCheckAnswer: () => ({ correct: false, note: '' }),
     mathReveal: () => ({ steps: [], answer: '' }),
-    mathHint: async () => ({ ok: true, hint: 'Look at the exponent.' })
+    mathHint: async (): Promise<MathHintResult> => ({ ok: true, hint: 'Look at the exponent.' }),
+    srsDecks: () => ({ decks: [] as DeckSummary[] }),
+    srsDraw: () => ({ card: null }),
+    srsReveal: () => ({ back: '' }),
+    srsGrade: () => ({ back: '', box: 1, nextDueDays: 1 })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -69,7 +74,11 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.mathNewProblem,
       IPC_CHANNELS.mathCheckAnswer,
       IPC_CHANNELS.mathReveal,
-      IPC_CHANNELS.mathHint
+      IPC_CHANNELS.mathHint,
+      IPC_CHANNELS.srsDecks,
+      IPC_CHANNELS.srsDraw,
+      IPC_CHANNELS.srsReveal,
+      IPC_CHANNELS.srsGrade
     ]);
   });
 

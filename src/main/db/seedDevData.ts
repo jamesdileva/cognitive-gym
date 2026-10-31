@@ -2,24 +2,40 @@ import type { GymDatabase } from './database';
 import { createBookEpisodesRepo } from './repositories/bookEpisodesRepo';
 import { createContentPoolRepo } from './repositories/contentPoolRepo';
 import { createFlashcardsRepo } from './repositories/flashcardsRepo';
+import { loadFlashcardDecks } from '../srs/deckLoader';
 
 /**
- * Dev-mode fixture seeds (AGENTS.md §6): all text below is original synthetic
- * content written for this repo — no book excerpts, no copyrighted material.
- * Runs only against an empty database, and only in dev.
+ * Dev-mode fixture seeds (AGENTS.md §6): all text below and in the committed
+ * deck files is original synthetic or standard-reference content — no book
+ * excerpts, no copyrighted material.
+ *
+ * Flashcard decks seed per-deck idempotently (a deck with existing rows is
+ * skipped), so new deck files appear on the next dev start without touching
+ * the user's review state. Content pool and episodes still only seed when
+ * their tables are entirely empty.
  */
+export function seedDevDataIfEmpty(db: GymDatabase, flashcardsDir: string): void {
+  seedFlashcardDecks(db, flashcardsDir);
 
-function seedFlashcards(db: GymDatabase): void {
+  const empty = (table: string): boolean =>
+    (db.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number }).c === 0;
+
+  if (!empty('content_pool') || !empty('book_episodes')) return;
+
+  const seed = db.transaction(() => {
+    seedContentPool(db);
+    seedBookEpisodes(db);
+  });
+  seed();
+}
+
+function seedFlashcardDecks(db: GymDatabase, flashcardsDir: string): void {
   const repo = createFlashcardsRepo(db);
-  const militaryAlphabet: Array<[string, string]> = [
-    ['A', 'Alpha'],
-    ['B', 'Bravo'],
-    ['C', 'Charlie'],
-    ['D', 'Delta'],
-    ['E', 'Echo']
-  ];
-  for (const [front, back] of militaryAlphabet) {
-    repo.create({ deckName: 'Military Alphabet', frontPrompt: front, backAnswer: back });
+  for (const deck of loadFlashcardDecks(flashcardsDir)) {
+    if (repo.listByDeck(deck.deck_name).length > 0) continue;
+    for (const card of deck.cards) {
+      repo.create({ deckName: deck.deck_name, frontPrompt: card.front, backAnswer: card.back });
+    }
   }
 }
 
@@ -102,22 +118,4 @@ function seedBookEpisodes(db: GymDatabase): void {
       isCanonical: false
     }
   ]);
-}
-
-/**
- * Seeds sample data when every content table is empty. Safe to call on every
- * dev startup; never touches a database the user has already populated.
- */
-export function seedDevDataIfEmpty(db: GymDatabase): void {
-  const empty = (table: string): boolean =>
-    (db.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number }).c === 0;
-
-  if (!empty('flashcards') || !empty('content_pool') || !empty('book_episodes')) return;
-
-  const seed = db.transaction(() => {
-    seedFlashcards(db);
-    seedContentPool(db);
-    seedBookEpisodes(db);
-  });
-  seed();
 }

@@ -6,6 +6,7 @@ import type {
   MathRevealResponse,
   MathTopicSummary
 } from './math-types';
+import type { DeckSummary, SrsCard, SrsGradeResult } from './srs-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -24,4 +25,8 @@ export interface GymApi {
   mathCheckAnswer(request: { problem: MathProblem; answer: string }): Promise<MathCheckResponse>;
   mathReveal(request: { problem: MathProblem }): Promise<MathRevealResponse>;
   mathHint(request: { problem: MathProblem; userMessage: string }): Promise<MathHintResult>;
+  srsDecks(): Promise<{ decks: DeckSummary[] }>;
+  srsDraw(request: { deckName: string }): Promise<{ card: SrsCard | null }>;
+  srsReveal(request: { id: number }): Promise<{ back: string }>;
+  srsGrade(request: { id: number; correct: boolean }): Promise<SrsGradeResult>;
 }

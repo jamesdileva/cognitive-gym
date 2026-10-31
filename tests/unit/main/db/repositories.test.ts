@@ -78,6 +78,58 @@ describe('flashcardsRepo', () => {
     expect(repo.deleteById(card.id)).toBe(true);
     expect(repo.deleteById(card.id)).toBe(false);
   });
+
+  it('getById resolves stored cards and misses unknown ids', () => {
+    const repo = createFlashcardsRepo(db);
+    const card = repo.create({ deckName: 'A', frontPrompt: 'f', backAnswer: 'b' });
+    expect(repo.getById(card.id)?.front_prompt).toBe('f');
+    expect(repo.getById(9999)).toBeUndefined();
+  });
+
+  it('updateReviewState persists Leitner box and due date', () => {
+    const repo = createFlashcardsRepo(db);
+    const card = repo.create({ deckName: 'A', frontPrompt: 'f', backAnswer: 'b' });
+    repo.updateReviewState(card.id, 4, '2026-11-07T00:00:00.000Z');
+    const row = repo.getById(card.id);
+    expect(row?.leitner_box_position).toBe(4);
+    expect(row?.next_review_due).toBe('2026-11-07T00:00:00.000Z');
+  });
+
+  it('drawDueCard draws the oldest due card of one deck only', () => {
+    const repo = createFlashcardsRepo(db);
+    repo.create({ deckName: 'A', frontPrompt: 'older', backAnswer: 'x', nextReviewDue: '2026-01-01T00:00:00.000Z' });
+    repo.create({ deckName: 'A', frontPrompt: 'newer', backAnswer: 'y', nextReviewDue: '2026-02-01T00:00:00.000Z' });
+    repo.create({ deckName: 'B', frontPrompt: 'other', backAnswer: 'z', nextReviewDue: '2025-01-01T00:00:00.000Z' });
+    repo.create({
+      deckName: 'A',
+      frontPrompt: 'future',
+      backAnswer: 'w',
+      nextReviewDue: '2999-01-01T00:00:00.000Z'
+    });
+
+    const drawn = repo.drawDueCard('A', '2026-10-30T00:00:00.000Z');
+    expect(drawn?.front_prompt).toBe('older');
+    expect(repo.drawDueCard('Does Not Exist')).toBeUndefined();
+  });
+
+  it('listDecks aggregates card counts; dueCount filters by date', () => {
+    const repo = createFlashcardsRepo(db);
+    repo.create({ deckName: 'A', frontPrompt: '1', backAnswer: 'x' });
+    repo.create({ deckName: 'A', frontPrompt: '2', backAnswer: 'y' });
+    repo.create({
+      deckName: 'B',
+      frontPrompt: '3',
+      backAnswer: 'z',
+      nextReviewDue: '2999-01-01T00:00:00.000Z'
+    });
+
+    expect(repo.listDecks()).toEqual([
+      { deck_name: 'A', card_count: 2 },
+      { deck_name: 'B', card_count: 1 }
+    ]);
+    expect(repo.dueCount('A', '2998-01-01T00:00:00.000Z')).toBe(2);
+    expect(repo.dueCount('B', '2998-01-01T00:00:00.000Z')).toBe(0);
+  });
 });
 
 describe('contentPoolRepo', () => {

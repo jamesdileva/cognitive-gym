@@ -1,0 +1,15 @@
+{
+  "deck_name": "Python Keywords",
+  "cards": [
+    { "front": "lambda arguments: expression", "back": "Anonymous inline function definition" },
+    { "front": "def", "back": "Starts a named function definition" },
+    { "front": "yield", "back": "Turns a function into a generator; pauses and emits one value" },
+    { "front": "[x for x in iterable if cond]", "back": "List comprehension — filtered inline list construction" },
+    { "front": "with open(path) as f:", "back": "Context manager — guarantees cleanup (file close) on exit" },
+    { "front": "*args", "back": "Collects extra positional arguments into a tuple" },
+    { "front": "**kwargs", "back": "Collects extra keyword arguments into a dict" },
+    { "front": "tuple vs list", "back": "Tuples are immutable and hashable; lists are mutable" },
+    { "front": "is vs ==", "back": "'is' compares identity (same object); '==' compares value equality" },
+    { "front": "__init__", "back": "Constructor hook run when a class instance is created" }
+  ]
+}

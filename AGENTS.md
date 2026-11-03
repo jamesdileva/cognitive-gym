@@ -58,15 +58,18 @@ Every sprint follows the same four-stage loop. Do not skip stages; do not merge 
 - **No secrets in the repo** (there should be none — everything is local).
 - **Match surrounding style**; formatting is enforced by Prettier, linting by ESLint.
 
-## 4. Commands (established in Sprint 0)
+## 4. Commands (established in Sprint 0; packaging added in Sprint 10)
 
 | Command | Purpose |
 | :-- | :-- |
 | `npm run dev` | Run the Electron app in dev mode |
 | `npm test` | Run Vitest unit/integration tests |
+| `npm run test:watch` | Tests in watch mode |
 | `npm run typecheck` | `tsc --noEmit` across main + renderer configs |
 | `npm run lint` | ESLint check |
+| `npm run format` | Prettier write |
 | `npm run build` | Production build of renderer + main |
+| `npm run dist` | Package a Windows NSIS installer (also `dist:dir`, `dist:mac`) |
 
 ## 5. Git Conventions
 

@@ -46,15 +46,14 @@ describe('dashboardService.overview', () => {
     const iso = (offsetDays: number): string =>
       new Date(today.getTime() - offsetDays * 86_400_000).toISOString();
 
-    // Attempt today (through the real repo → also exercises the log wiring).
-    createUserProgressRepo(db).recordAttempt({
-      moduleType: 'math',
-      contentItemId: 'a',
-      successful: true
-    });
+    // All three activity sources, written with dates derived from the frozen
+    // clock (repos stamp real "now", which would break the chain on any other
+    // calendar day — CI caught exactly that). The recordAttempt → attempt_log
+    // wiring is covered by the aggregation test above.
+    db.prepare(
+      "INSERT INTO attempt_log (module_type, content_item_id, successful, created_at) VALUES ('math', 'a', 1, ?)"
+    ).run(iso(0));
 
-    // Flashcard review yesterday + episode read two days ago: written with
-    // deterministic timestamps (the repos stamp real "now" internally).
     const cards = createFlashcardsRepo(db);
     const card = cards.create({ deckName: 'd', frontPrompt: 'f', backAnswer: 'b' });
     cards.updateReviewState(card.id, 2, iso(-1), true);
@@ -63,8 +62,7 @@ describe('dashboardService.overview', () => {
       "INSERT INTO attempt_log (module_type, content_item_id, successful, created_at) VALUES ('srs', 'card:d', 0, ?)"
     ).run(iso(1));
 
-    // Episode read two days ago: direct deterministic row (the repo stamps
-    // last_read_date with real "now", which would collapse the chain).
+    // Episode read two days ago.
     db.prepare(
       "INSERT INTO attempt_log (module_type, content_item_id, successful, created_at) VALUES ('episodes', 'Demo', 1, ?)"
     ).run(iso(2));

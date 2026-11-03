@@ -63,8 +63,13 @@ function HintPanel({ hint }: { hint: { loading: boolean; hint?: string; error?: 
   );
 }
 
-function ItemSession({ kind }: { kind: DiagnosticsKind }): JSX.Element {
-  const diag = useDiagnostics(kind);
+function ItemSession({
+  kind,
+  diag
+}: {
+  kind: DiagnosticsKind;
+  diag: ReturnType<typeof useDiagnostics>;
+}): JSX.Element {
   const { item } = diag;
   if (!item) return <div />;
 
@@ -195,7 +200,7 @@ export default function DiagnosticsView(): JSX.Element {
       </div>
 
       {diag.item ? (
-        <ItemSession key={`${kind}-${diag.item.id}`} kind={kind} />
+        <ItemSession key={`${kind}-${diag.item.id}`} kind={kind} diag={diag} />
       ) : (
         <>
           <p className="text-sm text-zinc-500">{room.blurb}</p>

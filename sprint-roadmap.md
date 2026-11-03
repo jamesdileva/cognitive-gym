@@ -181,4 +181,4 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 
 ## Post-v0.1 Backlog (not scheduled)
 
-Session pause/resume, multiple user profiles, EPUB ingestion hardening, Socratic tree visualization, export/import of decks, auto-update channel.
+Session pause/resume, multiple user profiles, EPUB ingestion hardening, Socratic tree visualization, export/import of decks, auto-update channel, streaming model output (deferred from Sprint 2 → Sprint 7 chat UI), per-attempt latency capture for true "diagnostic speed" scatter plots (attempt_log enables it), app icon + code signing for installers.

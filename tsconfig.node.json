@@ -6,15 +6,18 @@
     "src/main/**/*",
     "src/preload/**/*",
     "src/shared/**/*",
+    "src/renderer/src/env.d.ts",
     "tests/**/*"
   ],
   "compilerOptions": {
     "composite": true,
     "types": ["node"],
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["src/shared/*"],
-      "@main/*": ["src/main/*"]
+      "@main/*": ["src/main/*"],
+      "@renderer/*": ["src/renderer/src/*"]
     }
   }
 }

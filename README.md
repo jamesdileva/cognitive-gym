@@ -2,7 +2,7 @@
 
 Local-first desktop AI tutoring app — micro-learning sessions (5–20 min) across math, reading, coding, logic, and memory, powered entirely by your own machine: **Electron + React (TypeScript) + SQLite + Ollama**.
 
-**Status:** `v0.1.1` — all ten roadmap sprints delivered (see the [releases](https://github.com/jamesdileva/cognitive-gym/releases)).
+**Status:** `v0.1.2` — all ten roadmap sprints delivered (see the [releases](https://github.com/jamesdileva/cognitive-gym/releases)).
 
 | Document | Purpose |
 | :-- | :-- |

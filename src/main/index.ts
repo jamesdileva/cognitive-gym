@@ -27,13 +27,7 @@ import { createReviewService } from './srs/reviewService';
 import { createSynthesisService } from './synthesis/synthesisService';
 import { createDashboardService } from './dashboard/dashboardService';
 
-  const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
-
-  // Security hardening (Sprint 10 audit): the renderer is sandboxed but we
-  // still deny everything it could ask for or navigate to.
-  session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => {
-    callback(false);
-  });
+const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -76,6 +70,13 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
+  // Security hardening (adversarial audit): the renderer is sandboxed but we
+  // still deny everything it could ask for. Runs after `ready` — session APIs
+  // are not available before it, which broke packaged startup (v0.1.2-rc).
+  session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => {
+    callback(false);
+  });
+
   // Keep the stock menu in dev (devtools access); drop it in packaged builds.
   if (!isDev()) {
     Menu.setApplicationMenu(null);

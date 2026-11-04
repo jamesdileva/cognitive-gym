@@ -1,7 +1,7 @@
 {
   "name": "cognitive-gym",
   "productName": "Cognitive Gym",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Local-first AI tutoring desktop app — a cognitive gym for math, reading, coding, logic, and memory.",
   "main": "./out/main/index.js",
   "private": true,

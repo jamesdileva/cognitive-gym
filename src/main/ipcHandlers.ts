@@ -67,8 +67,8 @@ export interface IpcServices {
   srsDraw(request: { deckName: string }): { card: SrsCard | null };
   srsReveal(request: { id: number }): { back: string };
   srsGrade(request: { id: number; correct: boolean }): SrsGradeResult;
-  ingestSelectFile(): Promise<{ path: string | null }>;
-  ingestRun(request: { path: string; maxChunks?: number }): Promise<IngestionReport>;
+  ingestSelectFile(): Promise<{ token: string | null }>;
+  ingestRun(request: { token: string; maxChunks?: number }): Promise<IngestionReport>;
   ingestLibrary(): { sources: IngestedSourceSummary[] };
   ingestDelete(request: { sourceTitle: string }): { deleted: boolean };
   epIngest(request: EpisodicIngestRequest): Promise<EpisodicIngestReport>;
@@ -124,7 +124,7 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
     services.srsGrade(request)
   );
   ipcMain.handle(IPC_CHANNELS.ingestSelectFile, () => services.ingestSelectFile());
-  ipcMain.handle(IPC_CHANNELS.ingestRun, (_event, request: { path: string; maxChunks?: number }) =>
+  ipcMain.handle(IPC_CHANNELS.ingestRun, (_event, request: { token: string; maxChunks?: number }) =>
     services.ingestRun(request)
   );
   ipcMain.handle(IPC_CHANNELS.ingestLibrary, () => services.ingestLibrary());

@@ -105,6 +105,21 @@ describe('renderPrompt', () => {
     expect(rendered).not.toContain('{computed_problem}');
   });
 
+  it('treats variable content as data — $ sequences must not corrupt the prompt', () => {
+    // Book text can contain bash/JS idioms; a string replacement would let
+    // $& re-insert the placeholder and $` duplicate the prompt prefix.
+    const hostile = 'runs ${x} then echoes $& and $` traps';
+    const rendered = renderPrompt('reading-grader', {
+      passage: hostile,
+      question: 'q',
+      solution_criteria: 'c',
+      answer: 'a'
+    });
+    expect(rendered).toContain('Passage: runs ${x} then echoes $& and $` traps');
+    expect(rendered.match(/Passage:/g)).toHaveLength(1); // $` would duplicate the prefix
+    expect(rendered).not.toContain('{passage}');
+  });
+
   it('throws on unknown template ids', () => {
     expect(() => renderPrompt('nope')).toThrow(/Unknown prompt template/);
   });

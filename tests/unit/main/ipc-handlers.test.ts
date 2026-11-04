@@ -66,8 +66,8 @@ describe('registerIpcHandlers', () => {
     srsDraw: () => ({ card: null }),
     srsReveal: () => ({ back: '' }),
     srsGrade: () => ({ back: '', box: 1, nextDueDays: 1 }),
-    ingestSelectFile: async () => ({ path: null }),
-    ingestRun: async (): Promise<IngestionReport> => ({
+    ingestSelectFile: async () => ({ token: null }),
+    ingestRun: async (_request: { token: string; maxChunks?: number }): Promise<IngestionReport> => ({
       title: 'x',
       kind: 'txt',
       chunkCount: 0,

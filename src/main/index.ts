@@ -1,6 +1,7 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } from 'electron';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { FileTokenStore } from './ingestion/fileTokens';
 import { buildDbStatus } from './db/dbStatus';
 import { openDatabase } from './db/database';
 import { createBookEpisodesRepo } from './db/repositories/bookEpisodesRepo';
@@ -26,7 +27,13 @@ import { createReviewService } from './srs/reviewService';
 import { createSynthesisService } from './synthesis/synthesisService';
 import { createDashboardService } from './dashboard/dashboardService';
 
-const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
+  const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
+
+  // Security hardening (Sprint 10 audit): the renderer is sandboxed but we
+  // still deny everything it could ask for or navigate to.
+  session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => {
+    callback(false);
+  });
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -44,10 +51,18 @@ function createWindow(): BrowserWindow {
 
   mainWindow.on('ready-to-show', () => mainWindow.show());
 
-  // Open external links in the user's browser, never a new Electron window.
+  // Open http(s) links in the user's browser; deny everything else and never
+  // navigate the main window away from the app content.
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url);
+    if (/^https?:\/\//i.test(details.url)) {
+      shell.openExternal(details.url);
+    }
     return { action: 'deny' };
+  });
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const devUrl = process.env['ELECTRON_RENDERER_URL'];
+    const allowed = devUrl ? url.startsWith(devUrl) : false;
+    if (!allowed) event.preventDefault();
   });
 
   if (isDev()) {
@@ -112,14 +127,18 @@ app.whenReady().then(() => {
     content: loadDiagnosticsContent(join(appRoot, 'content-library'))
   });
 
-  /** Native file picker for the ingestion pipeline. */
-  const selectBookFile = async (): Promise<{ path: string | null }> => {
+  /** Native file picker — the ONLY path source. The renderer gets a
+   * single-use token, never the path (Sprint 10 audit: closes the
+   * arbitrary-file-read hole on the ingestRun/epIngest channels). */
+  const fileTokens = new FileTokenStore();
+  const selectBookFile = async (): Promise<{ token: string | null }> => {
     const result = await dialog.showOpenDialog({
       title: 'Choose a book to ingest',
       properties: ['openFile'],
       filters: [{ name: 'Books (PDF, EPUB, TXT)', extensions: ['pdf', 'epub', 'txt'] }]
     });
-    return { path: result.canceled ? null : (result.filePaths[0] ?? null) };
+    const selected = result.canceled ? null : (result.filePaths[0] ?? null);
+    return { token: selected ? fileTokens.issue(selected) : null };
   };
 
   /** Fan-out for every long-running pipeline's progress events. */
@@ -144,18 +163,25 @@ app.whenReady().then(() => {
     srsReveal: (request) => srs.revealCard(request.id),
     srsGrade: (request) => srs.gradeCard(request.id, request.correct),
     ingestSelectFile: selectBookFile,
-    ingestRun: (request) => ingestion.run(request.path, {
-      maxChunks: request.maxChunks,
-      onProgress: emitIngestProgress
-    }),
+    ingestRun: (request) => {
+      const path = fileTokens.resolve(request.token);
+      if (!path) throw new Error('Invalid or expired ingest token — pick the file again.');
+      return ingestion.run(path, {
+        maxChunks: request.maxChunks,
+        onProgress: emitIngestProgress
+      });
+    },
     ingestLibrary: () => ({ sources: ingestion.listLibrary() }),
     ingestDelete: (request) => ({ deleted: ingestion.deleteSource(request.sourceTitle) }),
-    epIngest: (request) =>
-      episodes.run(request.path, {
+    epIngest: (request) => {
+      const path = fileTokens.resolve(request.token);
+      if (!path) throw new Error('Invalid or expired ingest token — pick the file again.');
+      return episodes.run(path, {
         isCanonical: request.isCanonical,
         maxEpisodes: request.maxEpisodes,
         onProgress: emitIngestProgress
-      }),
+      });
+    },
     epTracks: () => ({ tracks: episodes.listTracks() }),
     epFeed: (request) => ({ feed: episodes.getDailyFeed(request.bookTitle, request.episodeNumber) }),
     epFinish: (request) => episodes.finishEpisode(request.bookTitle),

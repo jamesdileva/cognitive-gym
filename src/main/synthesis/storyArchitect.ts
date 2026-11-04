@@ -63,7 +63,9 @@ export function createStoryArchitect(deps: StoryArchitectDeps) {
 }
 
 export function renderStoryPrompt(topic: string): string {
-  return STORY_ARCHITECT.template.replace(/\{topic\}/g, topic);
+  // Function replacer: topic text is data, and `$` sequences in a replacement
+  // STRING would be interpreted as insertion patterns by String.replace.
+  return STORY_ARCHITECT.template.replace(/\{topic\}/g, () => topic);
 }
 
 export type StoryValidation =

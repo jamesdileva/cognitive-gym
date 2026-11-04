@@ -44,7 +44,8 @@ export interface EpisodeQuestion {
 }
 
 export interface EpisodicIngestRequest {
-  path: string;
+  /** Single-use token issued by ingest:select-file (paths never cross IPC). */
+  token: string;
   isCanonical: boolean;
   maxEpisodes?: number;
 }

@@ -31,7 +31,7 @@ const api: GymApi = {
   srsGrade: (request: { id: number; correct: boolean }) =>
     ipcRenderer.invoke(IPC_CHANNELS.srsGrade, request),
   ingestSelectFile: () => ipcRenderer.invoke(IPC_CHANNELS.ingestSelectFile),
-  ingestRun: (request: { path: string; maxChunks?: number }) =>
+  ingestRun: (request: { token: string; maxChunks?: number }) =>
     ipcRenderer.invoke(IPC_CHANNELS.ingestRun, request),
   ingestLibrary: () => ipcRenderer.invoke(IPC_CHANNELS.ingestLibrary),
   ingestDelete: (request: { sourceTitle: string }) =>

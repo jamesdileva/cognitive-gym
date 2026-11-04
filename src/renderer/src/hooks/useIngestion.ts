@@ -27,13 +27,13 @@ export function useIngestion() {
     async (maxChunks?: number): Promise<void> => {
       setError(null);
       setReport(null);
-      const { path } = await window.api.ingestSelectFile();
-      if (!path) return;
+      const { token } = await window.api.ingestSelectFile();
+      if (!token) return;
 
       setRunning(true);
       setProgress(null);
       try {
-        const outcome = await window.api.ingestRun({ path, maxChunks });
+        const outcome = await window.api.ingestRun({ token, maxChunks });
         setReport(outcome);
         await refresh();
       } catch (caught) {

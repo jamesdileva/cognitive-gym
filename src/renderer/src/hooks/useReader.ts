@@ -76,8 +76,8 @@ export function useReader() {
   }, []);
 
   const ingest = useCallback(
-    async (request: Omit<EpisodicIngestRequest, 'path'> & { path: string | null }): Promise<void> => {
-      if (!request.path) return;
+    async (request: Omit<EpisodicIngestRequest, 'token'> & { token: string | null }): Promise<void> => {
+      if (!request.token) return;
       setError(null);
       setReport(null);
       setRunning(true);

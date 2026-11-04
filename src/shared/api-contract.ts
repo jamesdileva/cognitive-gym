@@ -58,8 +58,9 @@ export interface GymApi {
   srsDraw(request: { deckName: string }): Promise<{ card: SrsCard | null }>;
   srsReveal(request: { id: number }): Promise<{ back: string }>;
   srsGrade(request: { id: number; correct: boolean }): Promise<SrsGradeResult>;
-  ingestSelectFile(): Promise<{ path: string | null }>;
-  ingestRun(request: { path: string; maxChunks?: number }): Promise<IngestionReport>;
+  /** Opens the native picker; returns a single-use token (paths never cross IPC). */
+  ingestSelectFile(): Promise<{ token: string | null }>;
+  ingestRun(request: { token: string; maxChunks?: number }): Promise<IngestionReport>;
   ingestLibrary(): Promise<{ sources: IngestedSourceSummary[] }>;
   ingestDelete(request: { sourceTitle: string }): Promise<{ deleted: boolean }>;
   /** Subscribes to main→renderer progress events; returns an unsubscribe fn. */

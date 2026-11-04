@@ -74,9 +74,9 @@ export default function ReaderView(): JSX.Element {
   const [limit, setLimit] = useState('');
 
   const pickAndIngest = async (): Promise<void> => {
-    const { path } = await window.api.ingestSelectFile();
-    const request: Omit<EpisodicIngestRequest, 'path'> & { path: string | null } = {
-      path,
+    const { token } = await window.api.ingestSelectFile();
+    const request: Omit<EpisodicIngestRequest, 'token'> & { token: string | null } = {
+      token,
       isCanonical: isCanonical === 'true',
       maxEpisodes: limit.trim() === '' ? undefined : Math.max(1, Number.parseInt(limit, 10) || 1)
     };

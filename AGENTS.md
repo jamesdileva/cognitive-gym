@@ -83,6 +83,11 @@ Every sprint follows the same four-stage loop. Do not skip stages; do not merge 
 - Ingested/derived book content (chunks, episodes, questions) lives **only in the local SQLite database**; never write it into source files, fixtures, or test snapshots.
 - Committed test fixtures must be **synthetic or public-domain** text only.
 - All user data stays on-device (SQLite in the app's userData directory). No telemetry, no external calls beyond `localhost:11434`.
+- **Security invariants (do not regress):**
+  - The renderer never receives or transmits filesystem paths — file ingestion is authorized exclusively by single-use, TTL-bound tokens issued after the native dialog (`src/main/ingestion/fileTokens.ts`).
+  - Every IPC handler validates payloads and re-checks authorization server-side (main process); the renderer is untrusted.
+  - Navigation away from app content is denied, permission requests are denied by default, and `shell.openExternal` only fires for http(s).
+  - Solution criteria, math answers, and logic solutions stay main-side; model output is untrusted text that is schema-validated and rendered as data (React escaping, never HTML).
 
 ## 7. AI Behavior Contract (domain rules agents must preserve)
 

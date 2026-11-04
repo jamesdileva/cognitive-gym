@@ -34,9 +34,9 @@ export const IPC_CHANNELS = {
   srsReveal: 'srs:reveal',
   /** Flashcards: apply the Leitner transition for a self-graded review. */
   srsGrade: 'srs:grade',
-  /** Ingestion: open the native file picker (pdf/epub/txt). */
+  /** Ingestion: open the native file picker; issues a single-use ingest token. */
   ingestSelectFile: 'ingest:select-file',
-  /** Ingestion: run the full pipeline on a file (long-running). */
+  /** Ingestion: run the full pipeline against a token (long-running). */
   ingestRun: 'ingest:run',
   /** Ingestion: list ingested sources with chunk/question counts. */
   ingestLibrary: 'ingest:library',

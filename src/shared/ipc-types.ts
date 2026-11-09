@@ -79,7 +79,11 @@ export const IPC_CHANNELS = {
   /** Speed Drill: submit a finished run; returns updated bests. */
   drillSubmitRun: 'drill:submit-run',
   /** Speed Drill: personal bests. */
-  drillBest: 'drill:best'
+  drillBest: 'drill:best',
+  /** Daily Mix: today's workout (components + teaser of the day). */
+  dailyToday: 'daily:today',
+  /** Daily Mix: grade today's teaser answer. */
+  dailyGradeTeaser: 'daily:grade-teaser'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

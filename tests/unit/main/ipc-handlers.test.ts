@@ -18,6 +18,7 @@ import type {
 import type { GradeResult, ReadingPassageSummary, ReadingSession } from '@shared/reading-types';
 import type { SynthesisReport } from '@shared/synthesis-types';
 import type { DrillStats } from '@shared/drill-types';
+import type { DailyTeaserGrade } from '@shared/daily-types';
 import type {
   DiagnosticsListItem,
   DiagnosticsSubmitResult,
@@ -116,7 +117,23 @@ describe('registerIpcHandlers', () => {
     }),
     dashOverview: () => ({ dailyStreak: 0, dueCards: 0, modules: [], activity: [] }),
     drillSubmitRun: (): DrillStats => ({ bestScore: 0, bestMinBudgetS: null, totalRuns: 0 }),
-    drillBest: () => ({ bestScore: 0, bestMinBudgetS: null, totalRuns: 0 })
+    drillBest: () => ({ bestScore: 0, bestMinBudgetS: null, totalRuns: 0 }),
+    dailyToday: () => ({
+      date: '2026-11-04',
+      components: [],
+      teaser: { id: 't', kind: 'riddle', prompt: '', done: false },
+      complete: false
+    }),
+    dailyGradeTeaser: async (): Promise<DailyTeaserGrade> => ({
+      score: 90,
+      feedback: 'ok',
+      overview: {
+        date: '',
+        components: [],
+        teaser: { id: '', kind: 'riddle', prompt: '', done: true },
+        complete: true
+      }
+    })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -169,7 +186,9 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.synthMath,
       IPC_CHANNELS.dashOverview,
       IPC_CHANNELS.drillSubmitRun,
-      IPC_CHANNELS.drillBest
+      IPC_CHANNELS.drillBest,
+      IPC_CHANNELS.dailyToday,
+      IPC_CHANNELS.dailyGradeTeaser
     ]);
   });
 

@@ -27,6 +27,8 @@ import { createReviewService } from './srs/reviewService';
 import { createSynthesisService } from './synthesis/synthesisService';
 import { createDashboardService } from './dashboard/dashboardService';
 import { createDrillService } from './drill/drillService';
+import { createDailyService } from './daily/dailyService';
+import { loadTeasers } from './daily/teaserLoader';
 
 const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
@@ -108,6 +110,12 @@ app.whenReady().then(() => {
   const cards = createFlashcardsRepo(db);
   const dashboard = createDashboardService({ db, cards });
   const drill = createDrillService({ db });
+  const daily = createDailyService({
+    db,
+    cards,
+    engine: ai,
+    teasers: loadTeasers(join(appRoot, 'content-library', 'teasers'))
+  });
   const srs = createReviewService({ cards });
   const ingestion = createIngestionService({
     engine: ai,
@@ -214,7 +222,9 @@ app.whenReady().then(() => {
     synthMath: (request) => synthesis.generateMathTemplates(request.count, emitIngestProgress),
     dashOverview: () => dashboard.overview(),
     drillSubmitRun: (request) => drill.submitRun(request),
-    drillBest: () => drill.stats()
+    drillBest: () => drill.stats(),
+    dailyToday: () => daily.today(),
+    dailyGradeTeaser: (request) => daily.gradeTeaser(request.answer)
   });
 
   createWindow();

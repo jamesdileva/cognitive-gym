@@ -1,0 +1,6 @@
+{
+  "teaser_id": "teaser_philosophical_02",
+  "kind": "philosophical",
+  "prompt": "Is it possible to be wrong about what you are currently feeling — for example, to be angry while believing you are calm? Take a position and defend it.",
+  "criteria": "Must take an explicit position on introspective fallibility, and support it with at least one concrete mechanism (self-deception, mislabelled arousal, social masking, therapy examples) or a principled argument for infallibility. Answers that only assert 'yes, people lie to themselves' without a mechanism are borderline and need the mechanism spelled out."
+}

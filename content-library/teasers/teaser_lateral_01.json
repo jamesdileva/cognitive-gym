@@ -1,0 +1,6 @@
+{
+  "teaser_id": "teaser_lateral_01",
+  "kind": "lateral",
+  "prompt": "A man pushes his car to a hotel and tells the owner he is bankrupt. Why?",
+  "criteria": "Must identify Monopoly: he is playing the board game, pushed his car token onto the 'Hotel' property, and went bankrupt in the game. Answers that only describe real-life car trouble do not meet the bar."
+}

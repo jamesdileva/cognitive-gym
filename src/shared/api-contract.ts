@@ -37,6 +37,10 @@ import type {
 import type { SynthesisReport } from './synthesis-types';
 import type { DashboardOverview } from './dashboard-types';
 import type { DrillRunResult, DrillStats } from './drill-types';
+import type {
+  DailyOverview,
+  DailyTeaserGrade
+} from './daily-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -100,4 +104,6 @@ export interface GymApi {
   dashOverview(): Promise<DashboardOverview>;
   drillSubmitRun(request: DrillRunResult): Promise<DrillStats>;
   drillBest(): Promise<DrillStats>;
+  dailyToday(): Promise<DailyOverview>;
+  dailyGradeTeaser(request: { answer: string }): Promise<DailyTeaserGrade>;
 }

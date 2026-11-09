@@ -1,0 +1,6 @@
+{
+  "teaser_id": "teaser_riddle_02",
+  "kind": "riddle",
+  "prompt": "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+  "criteria": "Must answer 'a map' (or equivalent: a globe/atlas of a map) and the reasoning must connect the cities-mountains-water trio to representations rather than real places."
+}

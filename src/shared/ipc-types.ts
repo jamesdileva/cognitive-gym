@@ -75,7 +75,11 @@ export const IPC_CHANNELS = {
   /** Synthesis: batch-generate math templates into userData. */
   synthMath: 'synth:math',
   /** Dashboard: streaks, mastery, and the 30-day activity series. */
-  dashOverview: 'dash:overview'
+  dashOverview: 'dash:overview',
+  /** Speed Drill: submit a finished run; returns updated bests. */
+  drillSubmitRun: 'drill:submit-run',
+  /** Speed Drill: personal bests. */
+  drillBest: 'drill:best'
 } as const;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

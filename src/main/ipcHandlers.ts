@@ -36,6 +36,7 @@ import type {
 } from '@shared/diagnostics-types';
 import type { SynthesisReport } from '@shared/synthesis-types';
 import type { DashboardOverview } from '@shared/dashboard-types';
+import type { DrillRunResult, DrillStats } from '@shared/drill-types';
 import {
   IPC_CHANNELS,
   type DbStatusResponse,
@@ -87,6 +88,8 @@ export interface IpcServices {
   synthStories(request: { count: number }): Promise<SynthesisReport>;
   synthMath(request: { count: number }): Promise<SynthesisReport>;
   dashOverview(): DashboardOverview;
+  drillSubmitRun(request: DrillRunResult): DrillStats;
+  drillBest(): DrillStats;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -179,4 +182,8 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
     services.synthMath(request)
   );
   ipcMain.handle(IPC_CHANNELS.dashOverview, () => services.dashOverview());
+  ipcMain.handle(IPC_CHANNELS.drillSubmitRun, (_event, request: DrillRunResult) =>
+    services.drillSubmitRun(request)
+  );
+  ipcMain.handle(IPC_CHANNELS.drillBest, () => services.drillBest());
 }

@@ -65,7 +65,10 @@ const api: GymApi = {
   synthStories: (request: { count: number }) =>
     ipcRenderer.invoke(IPC_CHANNELS.synthStories, request),
   synthMath: (request: { count: number }) => ipcRenderer.invoke(IPC_CHANNELS.synthMath, request),
-  dashOverview: () => ipcRenderer.invoke(IPC_CHANNELS.dashOverview)
+  dashOverview: () => ipcRenderer.invoke(IPC_CHANNELS.dashOverview),
+  drillSubmitRun: (request: { score: number; minBudgetS: number }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.drillSubmitRun, request),
+  drillBest: () => ipcRenderer.invoke(IPC_CHANNELS.drillBest)
 };
 
 contextBridge.exposeInMainWorld('api', api);

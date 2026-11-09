@@ -9,12 +9,24 @@ import LibraryView from './views/LibraryView';
 import MathView from './views/MathView';
 import ReaderView from './views/ReaderView';
 import ReadingRoomView from './views/ReadingRoomView';
+import SpeedDrillView from './views/SpeedDrillView';
 
-type ViewId = 'home' | 'math' | 'srs' | 'reader' | 'room' | 'diag' | 'library' | 'generator' | 'bakeoff';
+type ViewId =
+  | 'home'
+  | 'math'
+  | 'drill'
+  | 'srs'
+  | 'reader'
+  | 'room'
+  | 'diag'
+  | 'library'
+  | 'generator'
+  | 'bakeoff';
 
 const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'math', label: 'Math Gym' },
+  { id: 'drill', label: 'Speed Drill' },
   { id: 'srs', label: 'Flashcards' },
   { id: 'reader', label: 'Daily Read' },
   { id: 'room', label: 'Reading Room' },
@@ -47,6 +59,7 @@ export default function App(): JSX.Element {
       </nav>
       {view === 'home' && <HomeView />}
       {view === 'math' && <MathView />}
+      {view === 'drill' && <SpeedDrillView />}
       {view === 'srs' && <FlashcardsView />}
       {view === 'reader' && <ReaderView />}
       {view === 'room' && <ReadingRoomView />}

@@ -124,5 +124,18 @@ export const MIGRATIONS: Migration[] = [
       CREATE INDEX idx_attempt_log_created ON attempt_log (created_at);
       ALTER TABLE flashcards ADD COLUMN last_reviewed_at TIMESTAMP;
     `
+  },
+  {
+    version: 5,
+    name: 'speed-drill-runs',
+    up: `
+      CREATE TABLE speed_runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        score INTEGER NOT NULL CHECK (score >= 0),
+        min_budget_s INTEGER NOT NULL CHECK (min_budget_s >= 1),
+        created_at TIMESTAMP NOT NULL
+      );
+      CREATE INDEX idx_speed_runs_created ON speed_runs (created_at);
+    `
   }
 ];

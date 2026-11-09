@@ -26,6 +26,7 @@ import { loadMathTemplates, mergeMathTemplates } from './math/templateLoader';
 import { createReviewService } from './srs/reviewService';
 import { createSynthesisService } from './synthesis/synthesisService';
 import { createDashboardService } from './dashboard/dashboardService';
+import { createDrillService } from './drill/drillService';
 
 const isDev = (): boolean => Boolean(process.env['ELECTRON_RENDERER_URL']);
 
@@ -106,6 +107,7 @@ app.whenReady().then(() => {
   });
   const cards = createFlashcardsRepo(db);
   const dashboard = createDashboardService({ db, cards });
+  const drill = createDrillService({ db });
   const srs = createReviewService({ cards });
   const ingestion = createIngestionService({
     engine: ai,
@@ -210,7 +212,9 @@ app.whenReady().then(() => {
     synthStories: (request) =>
       synthesis.generateStories(request.count, emitIngestProgress),
     synthMath: (request) => synthesis.generateMathTemplates(request.count, emitIngestProgress),
-    dashOverview: () => dashboard.overview()
+    dashOverview: () => dashboard.overview(),
+    drillSubmitRun: (request) => drill.submitRun(request),
+    drillBest: () => drill.stats()
   });
 
   createWindow();

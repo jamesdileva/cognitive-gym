@@ -21,6 +21,9 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 8 | Coding Sandbox + Logic & Systems | Phase 4 | ✅ Done |
 | 9 | Synthetic Seed Pipeline | blueprint.md §1 | ✅ Done |
 | 10 | Gamification & Packaging | Phase 5 | ✅ Done |
+| 11 | Speed Drill (timed math) | v0.2 (user request) | ✅ Done |
+| 12 | Daily Mix (generalized daily workout) | v0.2 (user request) | ⬜ Not started |
+| 13 | Content & Ingestion Quality Pass | v0.2 (user request) | ⬜ Not started |
 
 ---
 
@@ -182,3 +185,9 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 ## Post-v0.1 Backlog (not scheduled)
 
 Session pause/resume, multiple user profiles, EPUB ingestion hardening, Socratic tree visualization, export/import of decks, auto-update channel, streaming model output (deferred from Sprint 2 → Sprint 7 chat UI), per-attempt latency capture for true "diagnostic speed" scatter plots (attempt_log enables it), app icon + code signing for installers.
+
+## v0.2 — Habit Loop (added 2026-11, user-directed)
+
+- **Sprint 11 — Speed Drill:** timed mental-math arcade mode. Budget starts at 10s, −1s per correct answer, floor 2s; a wrong answer or timeout ends the run (score = correct count). Per-question timing enables the deferred speed analytics. Daily-Mix component: "math game (until you lose)".
+- **Sprint 12 — Daily Mix:** generalized daily workout, deterministic per date: speed drill → short-story question → flashcard review → teaser of the day (riddles / lateral-thinking / philosophical-judgment prompts graded semantically). Completion tracked in `daily_log`; components auto-verify from `attempt_log` where possible.
+- **Sprint 13 — Content & Ingestion Quality Pass:** ingestion quality test on three user-provided books (Asimov *Foundation*, Preston *The Hot Zone*, a college physics text) — coherent chunks, answerable questions, "cognitive gym not school" difficulty bar; teaser content set (riddles, lateral-thinking, philosophical-judgment questions); more flashcard decks; **new deterministic content types: analogies + odd-one-out**; more logic grids / coding cases / systems logs; question-quality review via the Bake-Off panel.

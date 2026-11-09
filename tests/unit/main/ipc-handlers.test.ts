@@ -17,6 +17,7 @@ import type {
 } from '@shared/episodes-types';
 import type { GradeResult, ReadingPassageSummary, ReadingSession } from '@shared/reading-types';
 import type { SynthesisReport } from '@shared/synthesis-types';
+import type { DrillStats } from '@shared/drill-types';
 import type {
   DiagnosticsListItem,
   DiagnosticsSubmitResult,
@@ -50,7 +51,7 @@ describe('registerIpcHandlers', () => {
   };
 
   const noopServices: IpcServices = {
-    dbStatus: () => ({ migrationVersion: 4, tableCounts: {}, totalRows: 0 }),
+    dbStatus: () => ({ migrationVersion: 5, tableCounts: {}, totalRows: 0 }),
     aiStatus: async () => ({ engine: 'qwen2.5:7b', models: [], ollamaAvailable: false }),
     aiSetEngine: async (model: string) => ({ engine: model }),
     aiGenerate: async (_request: AiGenerateRequest): Promise<AiResult> => ({
@@ -113,7 +114,9 @@ describe('registerIpcHandlers', () => {
       questionCount: 0,
       failures: []
     }),
-    dashOverview: () => ({ dailyStreak: 0, dueCards: 0, modules: [], activity: [] })
+    dashOverview: () => ({ dailyStreak: 0, dueCards: 0, modules: [], activity: [] }),
+    drillSubmitRun: (): DrillStats => ({ bestScore: 0, bestMinBudgetS: null, totalRuns: 0 }),
+    drillBest: () => ({ bestScore: 0, bestMinBudgetS: null, totalRuns: 0 })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -164,7 +167,9 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.diagHint,
       IPC_CHANNELS.synthStories,
       IPC_CHANNELS.synthMath,
-      IPC_CHANNELS.dashOverview
+      IPC_CHANNELS.dashOverview,
+      IPC_CHANNELS.drillSubmitRun,
+      IPC_CHANNELS.drillBest
     ]);
   });
 
@@ -191,7 +196,7 @@ describe('registerIpcHandlers', () => {
 
     const dbStatusHandler = handlers.get(IPC_CHANNELS.dbStatus) as () => unknown;
     expect(dbStatusHandler()).toEqual({
-      migrationVersion: 4,
+      migrationVersion: 5,
       tableCounts: {
         flashcards: 1,
         user_progress: 0,

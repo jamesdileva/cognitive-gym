@@ -36,6 +36,7 @@ import type {
 } from './diagnostics-types';
 import type { SynthesisReport } from './synthesis-types';
 import type { DashboardOverview } from './dashboard-types';
+import type { DrillRunResult, DrillStats } from './drill-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -97,4 +98,6 @@ export interface GymApi {
   synthStories(request: { count: number }): Promise<SynthesisReport>;
   synthMath(request: { count: number }): Promise<SynthesisReport>;
   dashOverview(): Promise<DashboardOverview>;
+  drillSubmitRun(request: DrillRunResult): Promise<DrillStats>;
+  drillBest(): Promise<DrillStats>;
 }

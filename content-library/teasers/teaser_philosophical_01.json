@@ -1,0 +1,6 @@
+{
+  "teaser_id": "teaser_philosophical_01",
+  "kind": "philosophical",
+  "prompt": "A pill exists that makes you 10% better at everything you practice, but erases one memory of your choosing. Would you take it? Take a clear position and defend it.",
+  "criteria": "Must take an explicit yes/no position, name a concrete tradeoff (what a memory is worth vs. a flat skill gain), and engage with at least one consequence of the choice — either what kind of memory loss does to identity or what universal uptake would do to society. Restating the prompt without a position fails."
+}

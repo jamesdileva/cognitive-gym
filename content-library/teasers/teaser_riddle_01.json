@@ -1,0 +1,6 @@
+{
+  "teaser_id": "teaser_riddle_01",
+  "kind": "riddle",
+  "prompt": "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
+  "criteria": "Must answer 'an echo' (or equivalent: a reflected sound) and the reasoning must connect hearing-without-ears and coming-alive-with-wind to sound reflection."
+}

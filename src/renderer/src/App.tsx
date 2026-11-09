@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { JSX } from 'react';
 import BakeOffView from './views/BakeOffView';
+import DailyView from './views/DailyView';
 import DiagnosticsView from './views/DiagnosticsView';
 import FlashcardsView from './views/FlashcardsView';
 import GeneratorView from './views/GeneratorView';
@@ -13,6 +14,7 @@ import SpeedDrillView from './views/SpeedDrillView';
 
 type ViewId =
   | 'home'
+  | 'daily'
   | 'math'
   | 'drill'
   | 'srs'
@@ -25,6 +27,7 @@ type ViewId =
 
 const NAV_ITEMS: { id: ViewId; label: string }[] = [
   { id: 'home', label: 'Home' },
+  { id: 'daily', label: 'Daily Mix' },
   { id: 'math', label: 'Math Gym' },
   { id: 'drill', label: 'Speed Drill' },
   { id: 'srs', label: 'Flashcards' },
@@ -58,6 +61,7 @@ export default function App(): JSX.Element {
         <span className="ml-auto font-mono text-xs text-zinc-600">cognitive-gym</span>
       </nav>
       {view === 'home' && <HomeView />}
+      {view === 'daily' && <DailyView onNavigate={setView} />}
       {view === 'math' && <MathView />}
       {view === 'drill' && <SpeedDrillView />}
       {view === 'srs' && <FlashcardsView />}

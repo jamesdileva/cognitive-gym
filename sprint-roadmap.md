@@ -22,7 +22,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 9 | Synthetic Seed Pipeline | blueprint.md §1 | ✅ Done |
 | 10 | Gamification & Packaging | Phase 5 | ✅ Done |
 | 11 | Speed Drill (timed math) | v0.2 (user request) | ✅ Done |
-| 12 | Daily Mix (generalized daily workout) | v0.2 (user request) | ⬜ Not started |
+| 12 | Daily Mix (generalized daily workout) | v0.2 (user request) | ✅ Done |
 | 13 | Content & Ingestion Quality Pass | v0.2 (user request) | ⬜ Not started |
 
 ---

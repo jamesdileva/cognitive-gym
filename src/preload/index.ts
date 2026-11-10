@@ -71,7 +71,17 @@ const api: GymApi = {
   drillBest: () => ipcRenderer.invoke(IPC_CHANNELS.drillBest),
   dailyToday: () => ipcRenderer.invoke(IPC_CHANNELS.dailyToday),
   dailyGradeTeaser: (request: { answer: string }) =>
-    ipcRenderer.invoke(IPC_CHANNELS.dailyGradeTeaser, request)
+    ipcRenderer.invoke(IPC_CHANNELS.dailyGradeTeaser, request),
+  aiStreamGenerate: (request: { streamId: string; model: string; prompt: string; system?: string }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.aiStreamGenerate, request),
+  onStreamChunk: (callback: (event: { streamId: string; token: string }) => void) => {
+    const listener = (_event: unknown, chunk: { streamId: string; token: string }): void =>
+      callback(chunk);
+    ipcRenderer.on(IPC_CHANNELS.aiStreamToken, listener);
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.aiStreamToken, listener);
+    };
+  }
 };
 
 contextBridge.exposeInMainWorld('api', api);

@@ -55,7 +55,14 @@ function SidePanel({ label, side }: { label: string; side: BakeOffSide }): JSX.E
     <div className="flex flex-col rounded-lg border border-zinc-800 bg-zinc-900 p-4">
       <h3 className="font-semibold text-zinc-300">{label}</h3>
       {side.status === 'idle' && <p className="text-sm text-zinc-500">Awaiting run.</p>}
-      {side.status === 'running' && <p className="text-sm text-amber-400">Generating…</p>}
+      {side.status === 'running' && (
+        <>
+          <p className="text-sm text-amber-400">Generating…</p>
+          {side.streaming && (
+            <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap text-sm text-zinc-400">{side.streaming}</pre>
+          )}
+        </>
+      )}
       {side.status === 'error' && (
         <div className="text-sm text-red-400">
           <p className="font-mono text-xs uppercase">{side.failure?.kind}</p>

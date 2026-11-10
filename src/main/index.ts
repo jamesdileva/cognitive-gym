@@ -229,6 +229,12 @@ app.whenReady().then(() => {
     dashOverview: () => dashboard.overview(),
     drillSubmitRun: (request) => drill.submitRun(request),
     drillBest: () => drill.stats(),
+    aiStreamGenerate: (request, emitter) => {
+      const onToken = (token: string): void => {
+        emitter.send(IPC_CHANNELS.aiStreamToken, { streamId: request.streamId, token });
+      };
+      return toAiResult(ollama.generateStream({ ...request, onToken }));
+    },
     dailyToday: () => daily.today(),
     dailyGradeTeaser: (request) => daily.gradeTeaser(request.answer)
   });

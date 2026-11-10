@@ -118,6 +118,10 @@ describe('registerIpcHandlers', () => {
     dashOverview: () => ({ dailyStreak: 0, dueCards: 0, modules: [], activity: [] }),
     drillSubmitRun: (): DrillStats => ({ bestScore: 0, bestMinBudgetS: null, totalRuns: 0 }),
     drillBest: () => ({ bestScore: 0, bestMinBudgetS: null, totalRuns: 0 }),
+    aiStreamGenerate: async (): Promise<AiResult> => ({
+      ok: false,
+      failure: { kind: 'unreachable', message: 'not wired in this test' }
+    }),
     dailyToday: () => ({
       date: '2026-11-04',
       components: [],
@@ -188,7 +192,8 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.drillSubmitRun,
       IPC_CHANNELS.drillBest,
       IPC_CHANNELS.dailyToday,
-      IPC_CHANNELS.dailyGradeTeaser
+      IPC_CHANNELS.dailyGradeTeaser,
+      IPC_CHANNELS.aiStreamGenerate
     ]);
   });
 

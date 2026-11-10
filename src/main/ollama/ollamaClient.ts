@@ -21,6 +21,8 @@ export interface OllamaClientConfig {
   baseUrl?: string;
   /** Default generation time budget in ms (local 7B models can be slow). */
   timeoutMs?: number;
+  /** Idle timeout for streams: aborts when no bytes arrive for this long. */
+  streamIdleTimeoutMs?: number;
 }
 
 export interface GenerateRequest {
@@ -28,6 +30,11 @@ export interface GenerateRequest {
   prompt: string;
   system?: string;
   timeoutMs?: number;
+}
+
+export interface StreamHandlers {
+  /** Called per token as it arrives. Errors inside the callback propagate. */
+  onToken?: (token: string) => void;
 }
 
 export interface ChatMessage {
@@ -49,13 +56,20 @@ interface OllamaDoneFields {
   eval_duration?: number;
 }
 
-interface GenerateResponse extends OllamaDoneFields {
+interface OllamaStreamLine extends OllamaDoneFields {
+  model?: string;
+  response?: string;
+  message?: { role: string; content: string };
+  done: boolean;
+}
+
+interface OllamaGenerateResponse extends OllamaDoneFields {
   model: string;
   response: string;
   done: boolean;
 }
 
-interface ChatResponse extends OllamaDoneFields {
+interface OllamaChatResponse extends OllamaDoneFields {
   model: string;
   message?: { role: string; content: string };
   done: boolean;
@@ -105,7 +119,7 @@ export class OllamaClient {
 
   async generate(request: GenerateRequest): Promise<GenerationResult> {
     const timeoutMs = request.timeoutMs ?? this.defaultTimeoutMs;
-    const { body, latencyMs } = await this.requestJson<GenerateResponse>(
+    const { body, latencyMs } = await this.requestJson<OllamaGenerateResponse>(
       `${this.baseUrl}/api/generate`,
       {
         method: 'POST',
@@ -132,7 +146,7 @@ export class OllamaClient {
 
   async chat(request: ChatRequest): Promise<GenerationResult> {
     const timeoutMs = request.timeoutMs ?? this.defaultTimeoutMs;
-    const { body, latencyMs } = await this.requestJson<ChatResponse>(
+    const { body, latencyMs } = await this.requestJson<OllamaChatResponse>(
       `${this.baseUrl}/api/chat`,
       {
         method: 'POST',
@@ -151,6 +165,148 @@ export class OllamaClient {
       model: body.model ?? request.model,
       metrics: extractMetrics(body, latencyMs)
     };
+  }
+
+  /** Streaming variant of {@link generate} — calls `onToken` per NDJSON token. */
+  async generateStream(
+    request: GenerateRequest & StreamHandlers,
+    fetchImpl?: typeof fetch
+  ): Promise<GenerationResult> {
+    const timeoutMs = request.timeoutMs ?? this.defaultTimeoutMs;
+    const { text, model, metrics } = await this.streamJson(
+      `${this.baseUrl}/api/generate`,
+      {
+        model: request.model,
+        prompt: request.prompt,
+        system: request.system,
+        stream: true
+      },
+      (line) => line.response ?? '',
+      timeoutMs,
+      request.onToken,
+      fetchImpl ?? this.fetchImpl
+    );
+    return { text, model: model ?? request.model, metrics };
+  }
+
+  /** Streaming variant of {@link chat} — calls `onToken` per NDJSON token. */
+  async chatStream(
+    request: ChatRequest & StreamHandlers,
+    fetchImpl?: typeof fetch
+  ): Promise<GenerationResult> {
+    const timeoutMs = request.timeoutMs ?? this.defaultTimeoutMs;
+    const { text, model, metrics } = await this.streamJson(
+      `${this.baseUrl}/api/chat`,
+      {
+        model: request.model,
+        messages: request.messages,
+        stream: true
+      },
+      (line) => line.message?.content ?? '',
+      timeoutMs,
+      request.onToken,
+      fetchImpl ?? this.fetchImpl
+    );
+    return { text, model: model ?? request.model, metrics };
+  }
+
+  /**
+   * Shared NDJSON stream reader. Idle-timeout based: the abort timer resets on
+   * every received chunk, so slow-but-flowing generation never trips the
+   * budget while a stalled engine still gets cut off.
+   */
+  private async streamJson(
+    url: string,
+    body: Record<string, unknown>,
+    tokenOf: (line: OllamaStreamLine) => string,
+    idleTimeoutMs: number,
+    onToken: ((token: string) => void) | undefined,
+    fetchImpl: typeof fetch
+  ): Promise<{ text: string; model?: string; metrics: GenerationMetrics }> {
+    const controller = new AbortController();
+    let timedOut = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const armIdle = (): void => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, idleTimeoutMs);
+    };
+    armIdle();
+
+    const startedAt = performance.now();
+    try {
+      const response = await fetchImpl(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...body, stream: true }),
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        throw new OllamaError(
+          'http_error',
+          `Ollama responded with HTTP ${response.status} for ${url}`,
+          response.status
+        );
+      }
+      if (!response.body) {
+        throw new OllamaError('invalid_response', 'Ollama stream returned no body');
+      }
+
+      let text = '';
+      let model: string | undefined;
+      let doneLine: OllamaStreamLine | null = null;
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let streaming = true;
+      while (streaming) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        armIdle();
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed === '') continue;
+          let parsed: OllamaStreamLine;
+          try {
+            parsed = JSON.parse(trimmed) as OllamaStreamLine;
+          } catch {
+            continue; // tolerate partial/garbage lines in the stream
+          }
+          if (parsed.done === true) {
+            doneLine = parsed;
+            streaming = false;
+            break;
+          }
+          if (parsed.model) model = parsed.model;
+          const token = tokenOf(parsed);
+          if (token) {
+            text += token;
+            onToken?.(token);
+          }
+        }
+      }
+      if (timer) clearTimeout(timer);
+
+      if (doneLine === null) {
+        throw new OllamaError('invalid_response', 'Ollama stream ended without a done marker');
+      }
+      return {
+        text,
+        model,
+        metrics: extractMetrics(doneLine, Math.round(performance.now() - startedAt))
+      };
+    } catch (error) {
+      throw classifyOllamaFailure(error, timedOut, url, this.baseUrl, this.defaultTimeoutMs);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 
   private async requestJson<T>(
@@ -185,27 +341,31 @@ export class OllamaClient {
       }
       return { body, latencyMs: Math.round(performance.now() - startedAt) };
     } catch (error) {
-      throw this.classify(error, timedOut, url);
+      throw classifyOllamaFailure(error, timedOut, url, this.baseUrl, timeoutMs);
     } finally {
       clearTimeout(timer);
     }
   }
+}
 
-  private classify(error: unknown, timedOut: boolean, url: string): Error {
-    if (error instanceof OllamaError) return error;
-    if (timedOut) {
-      return new OllamaError(
-        'timeout',
-        `Ollama request exceeded its ${this.defaultTimeoutMs}ms budget: ${url}`
-      );
-    }
-    const cause = error as { cause?: { code?: string }; code?: string };
-    const code = cause?.cause?.code ?? cause?.code;
-    if (typeof code === 'string' && UNREACHABLE_CODES.has(code)) {
-      return new OllamaError('unreachable', `Cannot reach Ollama at ${this.baseUrl} (${code})`);
-    }
-    return new OllamaError('unreachable', `Ollama request failed: ${String(error)}`);
+/** Shared failure classifier for requestJson and streamJson. */
+function classifyOllamaFailure(
+  error: unknown,
+  timedOut: boolean,
+  url: string,
+  baseUrl: string,
+  budgetMs: number
+): Error {
+  if (error instanceof OllamaError) return error;
+  if (timedOut) {
+    return new OllamaError('timeout', `Ollama request exceeded its ${budgetMs}ms budget: ${url}`);
   }
+  const cause = error as { cause?: { code?: string }; code?: string };
+  const code = cause?.cause?.code ?? cause?.code;
+  if (typeof code === 'string' && UNREACHABLE_CODES.has(code)) {
+    return new OllamaError('unreachable', `Cannot reach Ollama at ${baseUrl} (${code})`);
+  }
+  return new OllamaError('unreachable', `Ollama request failed: ${String(error)}`);
 }
 
 /** Derives token metrics from Ollama's done-fields (durations are nanoseconds). */

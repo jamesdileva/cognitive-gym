@@ -23,7 +23,11 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 10 | Gamification & Packaging | Phase 5 | ✅ Done |
 | 11 | Speed Drill (timed math) | v0.2 (user request) | ✅ Done |
 | 12 | Daily Mix (generalized daily workout) | v0.2 (user request) | ✅ Done |
-| 13 | Content & Ingestion Quality Pass | v0.2 (user request) | ⬜ Not started |
+| 13 | Content & Ingestion Quality Pass | v0.2 (user request) | ✅ Done |
+| 14 | Diagram-Aware Ingestion | v0.2→v0.3 (user request) | ✅ Done |
+| 15 | Streaming AI Responses | v0.3 (user request) | ✅ Done |
+| 16 | Figure/Image UI | v0.3 (user request) | ⬜ Not started |
+| 17 | EPUB/PDF Hardening | v0.3 (user request) | ⬜ Not started |
 
 ---
 
@@ -192,6 +196,14 @@ Session pause/resume, multiple user profiles, EPUB ingestion hardening, Socratic
 - **Sprint 12 — Daily Mix:** generalized daily workout, deterministic per date: speed drill → short-story question → flashcard review → teaser of the day (riddles / lateral-thinking / philosophical-judgment prompts graded semantically). Completion tracked in `daily_log`; components auto-verify from `attempt_log` where possible.
 - **Sprint 13 — Content & Ingestion Quality Pass:** ingestion quality test on three user-provided books (Asimov *Foundation*, Preston *The Hot Zone*, a college physics text) — coherent chunks, answerable questions, "cognitive gym not school" difficulty bar; teaser content set (riddles, lateral-thinking, philosophical-judgment questions); more flashcard decks; **new deterministic content types: analogies + odd-one-out**; more logic grids / coding cases / systems logs; question-quality review via the Bake-Off panel.
 
-## Sprint 14 candidate (added 2026-11, user-directed)
+## Sprint 14 — Diagram-Aware Ingestion ✅ (delivered 2026-11, see Sprint 14 status row)
 
-- **Diagram-aware ingestion:** books like Knight Physics (394 MB, diagram-heavy) lose information when only the text layer is extracted. Candidate approach: extract figures/diagrams per page (PDF image objects) and either attach them to chunks as rendered images or describe them via a vision-capable model, so lessons/episodes keep their visual information. Blocked on: choosing a vision model that runs acceptably on local hardware.
+- ~~Blocked on: choosing a vision model~~ → delivered with qwen2.5vl:3b (see Sprint 14).
+
+## v0.3 — Feel & Robustness (added 2026-11, user-directed)
+
+- **Sprint 15 — Streaming AI Responses:** OllamaClient stream mode (NDJSON), streaming IPC events, live token rendering in the Bake-Off panel and Math hints. Highest-impact UX item — every free-text AI surface benefits.
+- **Sprint 16 — Figure/Image UI:** show the actual figure PNGs (Sprint 14 already saves them) inside Reading Room passages and Daily Read episodes via figure markers + an image-fetch IPC; streaming polish.
+- **Sprint 17 — EPUB/PDF Hardening:** two-column layout detection for academic PDFs, encrypted-PDF errors, EPUB spine robustness.
+
+**Deferred (recorded):** Socratic tree visualization — needs per-turn dialogue storage, branch-aware tutoring, and streaming as prerequisites; revisit after v0.3.

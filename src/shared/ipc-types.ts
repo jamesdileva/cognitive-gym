@@ -83,8 +83,23 @@ export const IPC_CHANNELS = {
   /** Daily Mix: today's workout (components + teaser of the day). */
   dailyToday: 'daily:today',
   /** Daily Mix: grade today's teaser answer. */
-  dailyGradeTeaser: 'daily:grade-teaser'
+  dailyGradeTeaser: 'daily:grade-teaser',
+  /** AI: run a streaming generation; tokens arrive as ai:stream-token events. */
+  aiStreamGenerate: 'ai:stream-generate',
+  /** AI: token events for in-flight streams (main→renderer). */
+  aiStreamToken: 'ai:stream-token'
 } as const;
+
+/** One streamed token, tagged with the stream it belongs to. */
+export interface StreamTokenEvent {
+  streamId: string;
+  token: string;
+}
+
+/** Minimal send surface for streaming token events back to one renderer. */
+export interface StreamEmitter {
+  send(channel: string, data: unknown): void;
+}
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 

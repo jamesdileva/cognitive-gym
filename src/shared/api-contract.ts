@@ -42,6 +42,9 @@ import type {
   DailyOverview,
   DailyTeaserGrade
 } from './daily-types';
+import type {
+  StreamTokenEvent
+} from './ipc-types';
 import type { DbStatusResponse, PingRequest, PingResponse } from './ipc-types';
 
 /**
@@ -107,4 +110,13 @@ export interface GymApi {
   drillBest(): Promise<DrillStats>;
   dailyToday(): Promise<DailyOverview>;
   dailyGradeTeaser(request: { answer: string }): Promise<DailyTeaserGrade>;
+  /** Streaming generation: tokens arrive via onStreamChunk under streamId. */
+  aiStreamGenerate(request: {
+    streamId: string;
+    model: string;
+    prompt: string;
+    system?: string;
+  }): Promise<AiResult>;
+  /** Subscribes to streamed tokens; returns an unsubscribe fn. */
+  onStreamChunk(callback: (event: StreamTokenEvent) => void): () => void;
 }

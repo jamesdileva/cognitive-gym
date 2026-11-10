@@ -38,6 +38,7 @@ import type {
 import type { SynthesisReport } from '@shared/synthesis-types';
 import type { DashboardOverview } from '@shared/dashboard-types';
 import type { DrillRunResult, DrillStats } from '@shared/drill-types';
+import type { StreamEmitter } from '@shared/ipc-types';
 import type {
   DailyOverview,
   DailyTeaserGrade
@@ -97,6 +98,11 @@ export interface IpcServices {
   drillBest(): DrillStats;
   dailyToday(): DailyOverview;
   dailyGradeTeaser(request: { answer: string }): Promise<DailyTeaserGrade>;
+  /** Streams tokens to the emitter; resolves with the full result. */
+  aiStreamGenerate(
+    request: { streamId: string; model: string; prompt: string; system?: string },
+    emitter: StreamEmitter
+  ): Promise<AiResult>;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -196,5 +202,12 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
   ipcMain.handle(IPC_CHANNELS.dailyToday, () => services.dailyToday());
   ipcMain.handle(IPC_CHANNELS.dailyGradeTeaser, (_event, request: { answer: string }) =>
     services.dailyGradeTeaser(request)
+  );
+  ipcMain.handle(
+    IPC_CHANNELS.aiStreamGenerate,
+    (
+      event: { sender: StreamEmitter },
+      request: { streamId: string; model: string; prompt: string; system?: string }
+    ) => services.aiStreamGenerate(request, event.sender)
   );
 }

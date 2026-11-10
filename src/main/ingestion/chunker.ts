@@ -146,3 +146,26 @@ export function chunkParagraphs(paragraphs: string[], minWords = MIN_CHUNK_WORDS
 
   return chunks;
 }
+
+/**
+ * Maps chunks (built from the same paragraph list) back to page spans, using
+ * the per-paragraph page tags from PDF extraction. Chunks reassemble exactly,
+ * so walking chunk→paragraphs against the page list is lossless. Returns
+ * undefined when no page tags exist (txt/epub).
+ */
+export function chunkPageSpans(
+  paragraphPages: number[] | undefined,
+  chunks: string[]
+): { fromPage: number; toPage: number }[] | undefined {
+  if (!paragraphPages || paragraphPages.length === 0) return undefined;
+
+  const spans: { fromPage: number; toPage: number }[] = [];
+  let cursor = 0;
+  for (const chunk of chunks) {
+    const chunkParagraphs = chunk.split('\n\n');
+    const pages = paragraphPages.slice(cursor, cursor + chunkParagraphs.length);
+    spans.push({ fromPage: Math.min(...pages), toPage: Math.max(...pages) });
+    cursor += chunkParagraphs.length;
+  }
+  return spans;
+}

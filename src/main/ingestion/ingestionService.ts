@@ -1,4 +1,4 @@
-import { access } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import type {
   IngestionReport,
   IngestProgress,
@@ -6,13 +6,19 @@ import type {
 } from '@shared/ingestion-types';
 import type { ContentPoolRepo, SourceType } from '../db/repositories/contentPoolRepo';
 import type { AiEngineService } from '../ollama/engine';
-import { chunkParagraphs } from './chunker';
+import type { OllamaClient } from '../ollama/ollamaClient';
+import { chunkParagraphs, chunkPageSpans } from './chunker';
 import { createDistiller, type DistilledQuestion } from './distiller';
 import { bookKindForPath, extractDocument } from './extract';
+import { describePages, attachFigureDescriptions, detectVisionModel } from './figures';
 
 export interface IngestionServiceDeps {
   engine: Pick<AiEngineService, 'generateWithEngine'>;
   contentPool: ContentPoolRepo;
+  /** Raw client for vision-language figure descriptions (optional — figures are enrichment). */
+  vlClient?: Pick<OllamaClient, 'chat' | 'listModels'>;
+  /** Where figure PNGs persist (userData/figures). Optional — no dir, no figures. */
+  figuresDir?: string;
 }
 
 export interface RunIngestionOptions {
@@ -57,15 +63,47 @@ export function createIngestionService(deps: IngestionServiceDeps) {
 
       const chunks = chunkParagraphs(document.paragraphs);
       const targets = options.maxChunks ? chunks.slice(0, options.maxChunks) : chunks;
+      const pageSpans = chunkPageSpans(document.paragraphPages, targets);
+
+      // Figure enrichment (PDF only): render + VL-describe pages inside the
+      // ingested chunks' spans, then attach descriptions to chunk text so the
+      // distiller generates questions that reference figure information.
+      const figureDescriptions = new Map<number, string>();
+      if (kind === 'pdf' && deps.figuresDir && deps.vlClient) {
+        try {
+          const pdfData = await readFile(filePath);
+          const vlModel = detectVisionModel(await deps.vlClient.listModels());
+          if (vlModel) {
+            const spanPages = [
+              ...new Set(pageSpans?.flatMap((span) => span.fromPage === span.toPage ? [span.fromPage] : [span.fromPage, span.toPage]) ?? [])
+            ];
+            for (const [page, description] of await describePages(pdfData, spanPages, {
+              figuresDir: deps.figuresDir,
+              bookSlug: document.title,
+              vlModel,
+              client: deps.vlClient
+            })) {
+              figureDescriptions.set(page, description);
+            }
+          }
+        } catch {
+          // Enrichment must never fail ingestion.
+        }
+      }
 
       const successes: { chunk: string; questions: DistilledQuestion[] }[] = [];
       const failures: IngestionReport['failures'] = [];
 
       for (const [index, chunk] of targets.entries()) {
         options.onProgress?.({ stage: 'distilling', current: index + 1, total: targets.length });
-        const outcome = await distiller.distill(chunk);
+        const span = pageSpans?.[index];
+        const enrichedChunk =
+          span && figureDescriptions.size > 0
+            ? attachFigureDescriptions(chunk, figureDescriptions, span.fromPage, span.toPage)
+            : chunk;
+        const outcome = await distiller.distill(enrichedChunk);
         if (outcome.ok) {
-          successes.push({ chunk, questions: outcome.questions });
+          successes.push({ chunk: enrichedChunk, questions: outcome.questions });
         } else {
           failures.push({ chunkIndex: index, reason: outcome.reason });
         }

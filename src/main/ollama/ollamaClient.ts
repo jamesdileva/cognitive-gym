@@ -91,6 +91,7 @@ const UNREACHABLE_CODES = new Set([
 export class OllamaClient {
   private readonly fetchImpl: typeof fetch;
   private readonly defaultTimeoutMs: number;
+  private readonly streamIdleTimeoutMs: number;
 
   constructor(
     private readonly config: OllamaClientConfig = {},
@@ -98,6 +99,7 @@ export class OllamaClient {
   ) {
     this.fetchImpl = fetchImpl;
     this.defaultTimeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.streamIdleTimeoutMs = config.streamIdleTimeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
   private get baseUrl(): string {
@@ -172,7 +174,6 @@ export class OllamaClient {
     request: GenerateRequest & StreamHandlers,
     fetchImpl?: typeof fetch
   ): Promise<GenerationResult> {
-    const timeoutMs = request.timeoutMs ?? this.defaultTimeoutMs;
     const { text, model, metrics } = await this.streamJson(
       `${this.baseUrl}/api/generate`,
       {
@@ -182,7 +183,7 @@ export class OllamaClient {
         stream: true
       },
       (line) => line.response ?? '',
-      timeoutMs,
+      this.streamIdleTimeoutMs,
       request.onToken,
       fetchImpl ?? this.fetchImpl
     );
@@ -194,7 +195,6 @@ export class OllamaClient {
     request: ChatRequest & StreamHandlers,
     fetchImpl?: typeof fetch
   ): Promise<GenerationResult> {
-    const timeoutMs = request.timeoutMs ?? this.defaultTimeoutMs;
     const { text, model, metrics } = await this.streamJson(
       `${this.baseUrl}/api/chat`,
       {
@@ -203,7 +203,7 @@ export class OllamaClient {
         stream: true
       },
       (line) => line.message?.content ?? '',
-      timeoutMs,
+      this.streamIdleTimeoutMs,
       request.onToken,
       fetchImpl ?? this.fetchImpl
     );
@@ -235,6 +235,16 @@ export class OllamaClient {
     };
     armIdle();
 
+    // Resolves null when the abort signal fires — raced against body reads so
+    // a stalled stream (mocked or real) is cut off by the idle timer.
+    const abortSignalPromise: Promise<null> = new Promise((resolve) => {
+      if (controller.signal.aborted) {
+        resolve(null);
+        return;
+      }
+      controller.signal.addEventListener('abort', () => resolve(null), { once: true });
+    });
+
     const startedAt = performance.now();
     try {
       const response = await fetchImpl(url, {
@@ -262,9 +272,13 @@ export class OllamaClient {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let streaming = true;
-      while (streaming) {
-        const { done, value } = await reader.read();
+      while (true) {
+        const readResult = await Promise.race([reader.read(), abortSignalPromise]);
+        if (readResult === null) {
+          // The controller aborted (stall or external cancel).
+          break;
+        }
+        const { done, value } = readResult;
         if (done) break;
         armIdle();
         buffer += decoder.decode(value, { stream: true });
@@ -281,7 +295,6 @@ export class OllamaClient {
           }
           if (parsed.done === true) {
             doneLine = parsed;
-            streaming = false;
             break;
           }
           if (parsed.model) model = parsed.model;
@@ -291,11 +304,14 @@ export class OllamaClient {
             onToken?.(token);
           }
         }
+        if (doneLine !== null) break;
       }
       if (timer) clearTimeout(timer);
 
       if (doneLine === null) {
-        throw new OllamaError('invalid_response', 'Ollama stream ended without a done marker');
+        throw timedOut
+          ? new OllamaError('timeout', `Ollama stream stalled past its ${idleTimeoutMs}ms idle budget: ${url}`)
+          : new OllamaError('invalid_response', 'Ollama stream ended without a done marker');
       }
       return {
         text,

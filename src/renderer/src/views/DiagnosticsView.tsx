@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { JSX } from 'react';
 import type { DiagnosticsKind, DiagnosticsSubmitResult } from '@shared/diagnostics-types';
-import type { LogicPuzzleView } from '@shared/diagnostics-types';
+import type { LogicPuzzleView, QuizItemView } from '@shared/diagnostics-types';
 import { useDiagnostics } from '../hooks/useDiagnostics';
 import type { OpenItem } from '../hooks/useDiagnostics';
 
@@ -17,6 +17,11 @@ const ROOMS: { kind: DiagnosticsKind; label: string; blurb: string }[] = [
     blurb: 'Deduction puzzles — fill the board; the tutor flags contradictions'
   },
   {
+    kind: 'quiz',
+    label: 'Quiz',
+    blurb: 'Analogies and odd-one-out — quick relationship and pattern puzzles'
+  },
+  {
     kind: 'systems',
     label: 'Systems',
     blurb: 'Log traces — diagnose the failure and propose the fix'
@@ -25,6 +30,10 @@ const ROOMS: { kind: DiagnosticsKind; label: string; blurb: string }[] = [
 
 function isLogicPuzzle(item: OpenItem): item is LogicPuzzleView {
   return 'rowCategory' in item;
+}
+
+function isQuizItem(item: OpenItem): item is QuizItemView {
+  return 'options' in item;
 }
 
 function ResultBanner({ result }: { result: DiagnosticsSubmitResult }): JSX.Element | null {
@@ -40,6 +49,20 @@ function ResultBanner({ result }: { result: DiagnosticsSubmitResult }): JSX.Elem
       <p className={result.correct ? 'text-sm text-emerald-400' : 'text-sm text-amber-400'}>
         {result.note}
       </p>
+    );
+  }
+  if (result.kind === 'quiz') {
+    return (
+      <div
+        className={`rounded border px-3 py-2 text-sm ${
+          result.correct
+            ? 'border-emerald-900 bg-emerald-950/40 text-emerald-300'
+            : 'border-amber-900 bg-amber-950/40 text-amber-300'
+        }`}
+      >
+        <p>{result.note}</p>
+        <p className="mt-1 text-zinc-300">{result.explanation}</p>
+      </div>
     );
   }
   return (
@@ -71,6 +94,7 @@ function ItemSession({
   diag: ReturnType<typeof useDiagnostics>;
 }): JSX.Element {
   const { item } = diag;
+  const result = diag.result;
   if (!item) return <div />;
 
   return (
@@ -117,6 +141,33 @@ function ItemSession({
             ))}
           </div>
         </section>
+      ) : isQuizItem(item) ? (
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+          <p className="text-[15px] leading-relaxed text-zinc-300">{item.prompt}</p>
+          <div className="mt-4 flex flex-col gap-2">
+            {item.options.map((option, index) => {
+              const selected = diag.selectedOption === index;
+              const answered = result !== null && 'correct' in result;
+              const chosenButWrong = answered && selected && !(result !== null && 'correct' in result && result.correct);
+              return (
+                <button
+                  key={index}
+                  className={`rounded border px-4 py-2 text-left text-sm transition ${
+                    selected
+                      ? chosenButWrong
+                        ? 'border-red-800 bg-red-950/40 text-red-200'
+                        : 'border-emerald-700 bg-emerald-950/40 text-emerald-200'
+                      : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500'
+                  } ${diag.result !== null ? 'cursor-default' : 'cursor-pointer'}`}
+                  disabled={result !== null || diag.busy}
+                  onClick={() => diag.selectOption(index)}
+                >
+                  {String.fromCharCode(65 + index)}. {option}
+                </button>
+              );
+            })}
+          </div>
+        </section>
       ) : (
         <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
           <p className="text-sm text-zinc-400">{item.goal}</p>
@@ -129,7 +180,7 @@ function ItemSession({
         </section>
       )}
 
-      {!isLogicPuzzle(item) && (
+      {!isLogicPuzzle(item) && !isQuizItem(item) && (
         <textarea
           className="min-h-24 rounded border border-zinc-700 bg-zinc-950 p-3 text-sm text-zinc-200 outline-none focus:border-emerald-700"
           placeholder={
@@ -143,23 +194,40 @@ function ItemSession({
       )}
 
       {diag.result && <ResultBanner result={diag.result} />}
-      <HintPanel hint={diag.hint} />
+      {!isQuizItem(item) && <HintPanel hint={diag.hint} />}
 
       <div className="flex flex-wrap gap-2 text-sm">
         <button
           className="rounded bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-          disabled={diag.busy || !diag.canSubmit}
+          disabled={diag.busy || !diag.canSubmit || (diag.result !== null && 'correct' in diag.result)}
           onClick={() => void diag.submit()}
         >
-          {diag.busy ? 'Working…' : kind === 'logic' ? 'Check board' : 'Submit for grading'}
+          {diag.busy
+            ? 'Working…'
+            : kind === 'logic'
+              ? 'Check board'
+              : kind === 'quiz'
+                ? 'Check answer'
+                : 'Submit for grading'}
         </button>
-        <button
-          className="rounded border border-zinc-700 px-4 py-2 text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
-          disabled={diag.hint.loading}
-          onClick={() => void diag.requestHint()}
-        >
-          {kind === 'coding' ? 'Request tutor analysis' : 'Ask for a contradiction alert'}
-        </button>
+        {kind === 'coding' && (
+          <button
+            className="rounded border border-zinc-700 px-4 py-2 text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+            disabled={diag.hint.loading}
+            onClick={() => void diag.requestHint()}
+          >
+            Request tutor analysis
+          </button>
+        )}
+        {kind === 'logic' && (
+          <button
+            className="rounded border border-zinc-700 px-4 py-2 text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+            disabled={diag.hint.loading}
+            onClick={() => void diag.requestHint()}
+          >
+            Ask for a contradiction alert
+          </button>
+        )}
       </div>
       <p className="text-xs text-zinc-600">
         Hints guide you toward the defect or contradiction — they never hand you the solution.

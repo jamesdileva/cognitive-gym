@@ -1,0 +1,9 @@
+{
+  "quiz_id": "quiz_analogy_01",
+  "kind": "analogy",
+  "title": "Opposites Attract",
+  "prompt": "Hot is to cold as up is to ___",
+  "options": ["down", "high", "over", "sky"],
+  "answer_index": 0,
+  "explanation": "The relationship is antonyms — direct opposites. 'Up' opposites 'down' the way 'hot' opposites 'cold'."
+}

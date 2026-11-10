@@ -1,0 +1,29 @@
+{
+  "deck_name": "Greek Alphabet",
+  "cards": [
+    { "front": "α", "back": "Alpha" },
+    { "front": "β", "back": "Beta" },
+    { "front": "γ", "back": "Gamma" },
+    { "front": "δ", "back": "Delta" },
+    { "front": "ε", "back": "Epsilon" },
+    { "front": "ζ", "back": "Zeta" },
+    { "front": "η", "back": "Eta" },
+    { "front": "θ", "back": "Theta" },
+    { "front": "ι", "back": "Iota" },
+    { "front": "κ", "back": "Kappa" },
+    { "front": "λ", "back": "Lambda" },
+    { "front": "μ", "back": "Mu" },
+    { "front": "ν", "back": "Nu" },
+    { "front": "ξ", "back": "Xi" },
+    { "front": "ο", "back": "Omicron" },
+    { "front": "π", "back": "Pi" },
+    { "front": "ρ", "back": "Rho" },
+    { "front": "σ", "back": "Sigma" },
+    { "front": "τ", "back": "Tau" },
+    { "front": "υ", "back": "Upsilon" },
+    { "front": "φ", "back": "Phi" },
+    { "front": "χ", "back": "Chi" },
+    { "front": "ψ", "back": "Psi" },
+    { "front": "ω", "back": "Omega" }
+  ]
+}

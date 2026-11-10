@@ -1,0 +1,9 @@
+{
+  "quiz_id": "quiz_odd_04",
+  "kind": "odd-one-out",
+  "title": "Instruments",
+  "prompt": "Which one does not belong?",
+  "options": ["violin", "flute", "guitar", "cello"],
+  "answer_index": 1,
+  "explanation": "Violin, guitar, and cello are string instruments; the flute is a wind instrument."
+}

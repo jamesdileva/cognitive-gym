@@ -6,10 +6,11 @@ import type {
   DiagnosticsSubmitResult,
   LogicPuzzleView,
   LogicRow,
+  QuizItemView,
   SystemsCaseView
 } from '@shared/diagnostics-types';
 
-export type OpenItem = CodingProblemView | LogicPuzzleView | SystemsCaseView;
+export type OpenItem = CodingProblemView | LogicPuzzleView | QuizItemView | SystemsCaseView;
 
 export interface HintState {
   loading: boolean;
@@ -18,14 +19,15 @@ export interface HintState {
 }
 
 /**
- * Shared state for the three diagnostics rooms: list → open → submit/hint.
- * One session instance serves all three kinds via the `kind` discriminator.
+ * Shared state for the four diagnostics rooms: list → open → submit/hint.
+ * One session instance serves all kinds via the `kind` discriminator.
  */
 export function useDiagnostics(kind: DiagnosticsKind) {
   const [items, setItems] = useState<DiagnosticsListItem[]>([]);
   const [item, setItem] = useState<OpenItem | null>(null);
   const [answer, setAnswer] = useState('');
   const [board, setBoard] = useState<LogicRow[]>([]);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [result, setResult] = useState<DiagnosticsSubmitResult | null>(null);
   const [hint, setHint] = useState<HintState>({ loading: false });
   const [busy, setBusy] = useState(false);
@@ -45,6 +47,7 @@ export function useDiagnostics(kind: DiagnosticsKind) {
       setItem(fresh);
       setResult(null);
       setAnswer('');
+      setSelectedOption(null);
       setHint({ loading: false });
       if (kind === 'logic' && 'rowCategory' in fresh) {
         const puzzle = fresh as LogicPuzzleView;
@@ -61,6 +64,7 @@ export function useDiagnostics(kind: DiagnosticsKind) {
     setResult(null);
     setAnswer('');
     setBoard([]);
+    setSelectedOption(null);
     setHint({ loading: false });
   }, []);
 
@@ -70,17 +74,26 @@ export function useDiagnostics(kind: DiagnosticsKind) {
     );
   }, []);
 
+  const selectOption = useCallback((index: number | null): void => {
+    setSelectedOption(index);
+  }, []);
+
   const submit = useCallback(async (): Promise<void> => {
     if (!item || busy) return;
     setBusy(true);
     try {
-      const payload = kind === 'logic' ? board : answer;
+      const payload =
+        kind === 'logic'
+          ? board
+          : kind === 'quiz'
+            ? (selectedOption as number)
+            : answer;
       const outcome = await window.api.diagSubmit({ kind, id: item.id, answer: payload });
       setResult(outcome);
     } finally {
       setBusy(false);
     }
-  }, [item, busy, kind, board, answer]);
+  }, [item, busy, kind, board, answer, selectedOption]);
 
   const requestHint = useCallback(async (): Promise<void> => {
     if (!item || hint.loading) return;
@@ -101,13 +114,16 @@ export function useDiagnostics(kind: DiagnosticsKind) {
   const canSubmit =
     kind === 'logic'
       ? board.length > 0 && board.every((row) => Object.values(row).every((v) => v !== ''))
-      : answer.trim().length > 0;
+      : kind === 'quiz'
+        ? selectedOption !== null
+        : answer.trim().length > 0;
 
   return {
     items,
     item,
     answer,
     board,
+    selectedOption,
     result,
     hint,
     busy,
@@ -117,6 +133,7 @@ export function useDiagnostics(kind: DiagnosticsKind) {
     closeItem,
     setAnswer,
     setRowValue,
+    selectOption,
     submit,
     requestHint
   };

@@ -1,0 +1,9 @@
+{
+  "quiz_id": "quiz_analogy_04",
+  "kind": "analogy",
+  "title": "Part and Whole",
+  "prompt": "Finger is to hand as toe is to ___",
+  "options": ["foot", "shoe", "leg", "nail"],
+  "answer_index": 0,
+  "explanation": "The relationship is part-to-whole: a finger is part of a hand, a toe is part of a foot. (A shoe contains toes but is not the body part the toe belongs to.)"
+}

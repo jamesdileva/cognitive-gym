@@ -1,0 +1,7 @@
+{
+  "case_id": "systems_port_conflict_03",
+  "title": "The Service That Won't Stay Up",
+  "goal": "Diagnose why the web service keeps failing to start and propose the fix.",
+  "log_text": "2026-11-04T08:00:12Z web[913]: Error: listen EADDRINUSE: address already in use 0.0.0.0:8080\n2026-11-04T08:00:12Z web[913]: npm ERR! code ELIFECYCLE\n2026-11-04T08:00:13Z systemd[1]: web.service: Main process exited, status=1\n2026-11-04T08:00:20Z systemd[1]: web.service: Scheduled restart job, restart counter=3\n2026-11-04T08:00:20Z systemd[1]: web.service: Start request repeated too quickly; giving up\n2026-11-04T08:00:21Z audit[2049]: lsof reports PID 774 (java) listening on 0.0.0.0:8080",
+  "diagnosis_criteria": "Must identify EADDRINUSE: another process (PID 774, java) already holds port 8080, so the web service crashes on every start and systemd's restart counter gives up. Restarting the web service again cannot succeed — the fix is to stop or reconfigure the conflicting java process (or move the web service to a different port), not to touch systemd or npm."
+}

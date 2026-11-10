@@ -58,7 +58,7 @@ const api: GymApi = {
   diagContent: (request: { kind: string }) => ipcRenderer.invoke(IPC_CHANNELS.diagContent, request),
   diagOpen: (request: { kind: string; id: string }) =>
     ipcRenderer.invoke(IPC_CHANNELS.diagOpen, request),
-  diagSubmit: (request: { kind: string; id: string; answer: string | Record<string, string>[] }) =>
+  diagSubmit: (request: { kind: string; id: string; answer: string | Record<string, string>[] | number }) =>
     ipcRenderer.invoke(IPC_CHANNELS.diagSubmit, request),
   diagHint: (request: { kind: string; id: string; answer: string | Record<string, string>[] }) =>
     ipcRenderer.invoke(IPC_CHANNELS.diagHint, request),

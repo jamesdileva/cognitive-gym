@@ -1,0 +1,9 @@
+{
+  "quiz_id": "quiz_odd_01",
+  "kind": "odd-one-out",
+  "title": "Fruit Bowl",
+  "prompt": "Which one does not belong?",
+  "options": ["apple", "banana", "carrot", "cherry"],
+  "answer_index": 2,
+  "explanation": "Carrot is a root vegetable; apple, banana, and cherry are all fruits."
+}

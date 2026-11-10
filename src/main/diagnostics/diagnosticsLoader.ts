@@ -31,16 +31,28 @@ export interface SystemsCase {
   diagnosis_criteria: string;
 }
 
+export interface QuizItem {
+  quiz_id: string;
+  kind: 'analogy' | 'odd-one-out';
+  title: string;
+  prompt: string;
+  options: string[];
+  /** Index into options — stays main-side. */
+  answer_index: number;
+  explanation: string;
+}
+
 export interface DiagnosticsContent {
   coding: CodingProblem[];
   logic: LogicPuzzle[];
   systems: SystemsCase[];
+  quizzes: QuizItem[];
 }
 
 const FIRST_CATEGORY_SIZE = 3;
 
 /**
- * Loads and validates every `*.json` fixture in the three content-library
+ * Loads and validates every `*.json` fixture in the diagnostics content
  * directories. Same strict boundary discipline as the other loaders
  * (AGENTS.md §3): a malformed fixture fails loudly at startup.
  */
@@ -48,7 +60,8 @@ export function loadDiagnosticsContent(root: string): DiagnosticsContent {
   return {
     coding: loadDir(join(root, 'coding-diagnostics'), 'coding problem', validateCoding),
     logic: loadDir(join(root, 'logic-grids'), 'logic grid', validateLogic),
-    systems: loadDir(join(root, 'systems-logs'), 'systems case', validateSystems)
+    systems: loadDir(join(root, 'systems-logs'), 'systems case', validateSystems),
+    quizzes: loadDir(join(root, 'quizzes'), 'quiz item', validateQuiz)
   };
 }
 
@@ -86,7 +99,7 @@ function loadDir<T>(dir: string, label: string, validate: (raw: unknown, file: s
 
 function itemKey(item: unknown): string {
   const record = item as Record<string, unknown>;
-  return String(record['problem_id'] ?? record['puzzle_id'] ?? record['case_id']);
+  return String(record['problem_id'] ?? record['puzzle_id'] ?? record['case_id'] ?? record['quiz_id']);
 }
 
 function requireString(record: Record<string, unknown>, field: string, where: string): string {
@@ -121,6 +134,52 @@ function validateSystems(raw: unknown, file: string): SystemsCase {
     goal: requireString(record, 'goal', where),
     log_text: requireString(record, 'log_text', where),
     diagnosis_criteria: requireString(record, 'diagnosis_criteria', where)
+  };
+}
+
+function validateQuiz(raw: unknown, file: string): QuizItem {
+  const where = `quiz item '${file}'`;
+  if (typeof raw !== 'object' || raw === null) throw new Error(`${where}: expected object`);
+  const record = raw as Record<string, unknown>;
+
+  const kind = record['kind'];
+  if (kind !== 'analogy' && kind !== 'odd-one-out') {
+    throw new Error(`${where}: 'kind' must be 'analogy' or 'odd-one-out'`);
+  }
+
+  const optionsRaw = record['options'];
+  if (!Array.isArray(optionsRaw) || optionsRaw.length < 2 || optionsRaw.length > 6) {
+    throw new Error(`${where}: 'options' must hold 2–6 entries`);
+  }
+  const options: string[] = [];
+  for (const option of optionsRaw) {
+    if (typeof option !== 'string' || option.trim() === '') {
+      throw new Error(`${where}: every option must be a non-empty string`);
+    }
+    if (options.some((existing) => existing.toLowerCase() === option.toLowerCase())) {
+      throw new Error(`${where}: duplicate option '${option}'`);
+    }
+    options.push(option);
+  }
+
+  const answerIndex = record['answer_index'];
+  if (
+    typeof answerIndex !== 'number' ||
+    !Number.isInteger(answerIndex) ||
+    answerIndex < 0 ||
+    answerIndex >= options.length
+  ) {
+    throw new Error(`${where}: 'answer_index' must be an integer within options`);
+  }
+
+  return {
+    quiz_id: requireString(record, 'quiz_id', where),
+    kind,
+    title: requireString(record, 'title', where),
+    prompt: requireString(record, 'prompt', where),
+    options,
+    answer_index: answerIndex,
+    explanation: requireString(record, 'explanation', where)
   };
 }
 

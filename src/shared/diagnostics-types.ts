@@ -1,8 +1,8 @@
 import type { AiFailure } from './ai-types';
 
-/** Diagnostics rooms contract (architecture.md §6C/§6D): coding, logic, systems. */
+/** Diagnostics rooms contract (architecture.md §6C/§6D + v0.2 quiz room). */
 
-export type DiagnosticsKind = 'coding' | 'logic' | 'systems';
+export type DiagnosticsKind = 'coding' | 'logic' | 'systems' | 'quiz';
 
 export interface CodingProblemView {
   id: string;
@@ -26,11 +26,21 @@ export interface LogicPuzzleView {
 /** One submitted assignment row: { Category: chosenValue, ... } keyed by fill category. */
 export type LogicRow = Record<string, string>;
 
+/** Systems log case view — the trace, no diagnosis criteria. */
 export interface SystemsCaseView {
   id: string;
   title: string;
   goal: string;
   logText: string;
+}
+
+/** Multiple-choice quiz item (analogies, odd-one-out) — no answer shipped. */
+export interface QuizItemView {
+  id: string;
+  kind: 'analogy' | 'odd-one-out';
+  title: string;
+  prompt: string;
+  options: string[];
 }
 
 export interface DiagnosticsListItem {
@@ -39,8 +49,9 @@ export interface DiagnosticsListItem {
   detail: string;
 }
 
-/** Deterministic result for logic grids; graded result for coding/systems. */
+/** Deterministic result for logic grids and quizzes; graded for coding/systems. */
 export type DiagnosticsSubmitResult =
   | { kind: 'logic'; correct: boolean; note: string }
+  | { kind: 'quiz'; correct: boolean; note: string; explanation: string }
   | { kind: 'graded'; ok: true; score: number; feedback: string }
   | { ok: false; failure: AiFailure };

@@ -1,0 +1,9 @@
+{
+  "quiz_id": "quiz_analogy_03",
+  "kind": "analogy",
+  "title": "Makers and Made",
+  "prompt": "Author is to book as composer is to ___",
+  "options": ["symphony", "instrument", "orchestra", "concert"],
+  "answer_index": 0,
+  "explanation": "The relationship is creator-to-creation: an author writes a book, a composer writes a symphony. The orchestra performs it and the instrument is used — neither is the created work."
+}

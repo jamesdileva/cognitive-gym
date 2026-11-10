@@ -1,0 +1,25 @@
+{
+  "deck_name": "Elements 1–20",
+  "cards": [
+    { "front": "H", "back": "Hydrogen" },
+    { "front": "He", "back": "Helium" },
+    { "front": "Li", "back": "Lithium" },
+    { "front": "Be", "back": "Beryllium" },
+    { "front": "B", "back": "Boron" },
+    { "front": "C", "back": "Carbon" },
+    { "front": "N", "back": "Nitrogen" },
+    { "front": "O", "back": "Oxygen" },
+    { "front": "F", "back": "Fluorine" },
+    { "front": "Ne", "back": "Neon" },
+    { "front": "Na", "back": "Sodium" },
+    { "front": "Mg", "back": "Magnesium" },
+    { "front": "Al", "back": "Aluminium" },
+    { "front": "Si", "back": "Silicon" },
+    { "front": "P", "back": "Phosphorus" },
+    { "front": "S", "back": "Sulfur" },
+    { "front": "Cl", "back": "Chlorine" },
+    { "front": "Ar", "back": "Argon" },
+    { "front": "K", "back": "Potassium" },
+    { "front": "Ca", "back": "Calcium" }
+  ]
+}

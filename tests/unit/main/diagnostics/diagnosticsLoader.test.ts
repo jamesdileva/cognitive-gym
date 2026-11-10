@@ -40,11 +40,14 @@ describe('loadDiagnosticsContent — committed content library', () => {
 
     expect(content.coding.map((p) => p.problem_id)).toEqual([
       'coding_closure_scope_01',
+      'coding_mutable_default_02',
       'coding_off_by_one_01'
     ]);
-    expect(content.logic.map((p) => p.puzzle_id)).toEqual(['logic_harbor_01']);
+    expect(content.quizzes.length).toBeGreaterThanOrEqual(8);
+    expect(content.logic.map((p) => p.puzzle_id)).toEqual(['logic_conference_02', 'logic_harbor_01']);
     expect(content.systems.map((c) => c.case_id)).toEqual([
       'systems_backup_full_01',
+      'systems_port_conflict_03',
       'systems_upstream_502_01'
     ]);
 
@@ -60,7 +63,7 @@ describe('loadDiagnosticsContent — committed content library', () => {
     const dir = mkdtempSync(join(tmpdir(), 'cg-diag-empty-'));
     tempDirs.push(dir);
     const content = loadDiagnosticsContent(dir);
-    expect(content).toEqual({ coding: [], logic: [], systems: [] });
+    expect(content).toEqual({ coding: [], logic: [], systems: [], quizzes: [] });
   });
 });
 

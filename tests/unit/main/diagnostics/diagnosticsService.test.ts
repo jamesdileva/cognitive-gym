@@ -223,8 +223,9 @@ describe('diagnosticsService — cross-room guards', () => {
       progress: progressSpy,
       content: CONTENT
     });
-    expect(service.list('coding').items).toHaveLength(2);
-    expect(service.list('logic').items).toHaveLength(1);
-    expect(service.list('systems').items).toHaveLength(2);
+    expect(service.list('coding').items).toHaveLength(3);
+    expect(service.list('logic').items).toHaveLength(2);
+    expect(service.list('systems').items).toHaveLength(3);
+    expect(service.list('quiz').items).toHaveLength(8);
   });
 });

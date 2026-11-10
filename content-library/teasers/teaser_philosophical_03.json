@@ -1,0 +1,6 @@
+{
+  "teaser_id": "teaser_philosophical_03",
+  "kind": "philosophical",
+  "prompt": "If you could know the exact date of your death, would you want to know? Take a clear position and defend it.",
+  "criteria": "Must take an explicit yes/no position, engage a concrete consequence of knowing (planning vs. dread, living deliberately vs. fatalism), and address at least one second-order effect (how others would treat you, or whether the knowledge changes the outcome itself). Restating the question fails."
+}

@@ -1,0 +1,6 @@
+{
+  "teaser_id": "teaser_philosophical_04",
+  "kind": "philosophical",
+  "prompt": "If a computer could perfectly simulate a human brain — every neuron, every firing pattern — would it be conscious? Take a position and defend it.",
+  "criteria": "Must take an explicit position (conscious, not conscious, or a principled third option), and engage with at least one real consideration: the substrate-independence argument, subjective experience (qualia), or behavioral equivalence being insufficient. Merely describing the simulation fails."
+}

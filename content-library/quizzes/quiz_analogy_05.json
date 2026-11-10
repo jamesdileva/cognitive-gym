@@ -1,0 +1,14 @@
+{
+  "quiz_id": "quiz_analogy_05",
+  "kind": "analogy",
+  "title": "Member and Collection",
+  "prompt": "Tree is to forest as star is to ___",
+  "options": [
+    "galaxy",
+    "sky",
+    "planet",
+    "night"
+  ],
+  "answer_index": 0,
+  "explanation": "The relationship is member-to-collection: many trees make a forest, many stars make a galaxy. (The sky contains stars but is not a collection OF stars the way a forest is of trees.)"
+}

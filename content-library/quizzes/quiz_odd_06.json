@@ -1,0 +1,14 @@
+{
+  "quiz_id": "quiz_odd_06",
+  "kind": "odd-one-out",
+  "title": "Arts",
+  "prompt": "Which one does not belong?",
+  "options": [
+    "poem",
+    "novel",
+    "painting",
+    "short story"
+  ],
+  "answer_index": 2,
+  "explanation": "Poem, novel, and short story are written literary forms; a painting is a visual artwork."
+}

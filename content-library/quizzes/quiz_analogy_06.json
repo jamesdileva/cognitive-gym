@@ -1,0 +1,14 @@
+{
+  "quiz_id": "quiz_analogy_06",
+  "kind": "analogy",
+  "title": "Cause and Effect",
+  "prompt": "Cold is to ice as hot is to ___",
+  "options": [
+    "steam",
+    "sun",
+    "water",
+    "winter"
+  ],
+  "answer_index": 0,
+  "explanation": "The relationship is cause-to-product: cold produces ice, hot produces steam. The sun is a heat SOURCE, not its product."
+}

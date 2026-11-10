@@ -1,0 +1,6 @@
+{
+  "teaser_id": "teaser_lateral_02",
+  "kind": "lateral",
+  "prompt": "A woman has two sons born on the same day, of the same year, to the same parents — yet they are not twins. How is this possible?",
+  "criteria": "Must identify that they are part of a set of three or more (triplets, quadruplets): \"two sons\" does not mean only two children were born. The trap is assuming the pair exhausts the birth."
+}

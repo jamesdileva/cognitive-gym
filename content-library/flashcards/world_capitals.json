@@ -1,0 +1,17 @@
+{
+  "deck_name": "World Capitals",
+  "cards": [
+    { "front": "France", "back": "Paris" },
+    { "front": "Japan", "back": "Tokyo" },
+    { "front": "Canada", "back": "Ottawa" },
+    { "front": "Australia", "back": "Canberra" },
+    { "front": "Brazil", "back": "Brasília" },
+    { "front": "Egypt", "back": "Cairo" },
+    { "front": "Turkey", "back": "Ankara" },
+    { "front": "Switzerland", "back": "Bern" },
+    { "front": "New Zealand", "back": "Wellington" },
+    { "front": "Morocco", "back": "Rabat" },
+    { "front": "Vietnam", "back": "Hanoi" },
+    { "front": "Norway", "back": "Oslo" }
+  ]
+}

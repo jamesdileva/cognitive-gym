@@ -1,0 +1,14 @@
+{
+  "quiz_id": "quiz_odd_05",
+  "kind": "odd-one-out",
+  "title": "Swimmers",
+  "prompt": "Which one does not belong?",
+  "options": [
+    "salmon",
+    "tuna",
+    "shark",
+    "dolphin"
+  ],
+  "answer_index": 3,
+  "explanation": "Salmon, tuna, and shark are fish; the dolphin is a mammal — it breathes air and is warm-blooded."
+}

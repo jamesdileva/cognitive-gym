@@ -226,6 +226,6 @@ describe('diagnosticsService — cross-room guards', () => {
     expect(service.list('coding').items).toHaveLength(3);
     expect(service.list('logic').items).toHaveLength(2);
     expect(service.list('systems').items).toHaveLength(3);
-    expect(service.list('quiz').items).toHaveLength(8);
+    expect(service.list('quiz').items).toHaveLength(10);
   });
 });

@@ -91,7 +91,9 @@ app.whenReady().then(() => {
     seedDevDataIfEmpty(db, join(appRoot, 'content-library', 'flashcards'));
   }
 
-  const ai = createAiEngineService(db, new OllamaClient());
+  const ollama = new OllamaClient();
+  const figuresDir = join(app.getPath('userData'), 'figures');
+  const ai = createAiEngineService(db, ollama);
   const seedMath = loadMathTemplates(join(appRoot, 'content-library', 'math-formulas'));
   const generatedMathDir = join(app.getPath('userData'), 'math-templates');
   const generatedMath = existsSync(generatedMathDir)
@@ -119,13 +121,17 @@ app.whenReady().then(() => {
   const srs = createReviewService({ cards });
   const ingestion = createIngestionService({
     engine: ai,
-    contentPool: createContentPoolRepo(db)
+    contentPool: createContentPoolRepo(db),
+    vlClient: ollama,
+    figuresDir
   });
   const episodes = createEpisodeService({
     engine: ai,
     bookEpisodes: createBookEpisodesRepo(db),
     contentPool: createContentPoolRepo(db),
-    streaks: createReadingStreaksRepo(db)
+    streaks: createReadingStreaksRepo(db),
+    vlClient: ollama,
+    figuresDir
   });
   const reading = createReadingService({
     engine: ai,

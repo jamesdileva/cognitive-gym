@@ -10,6 +10,12 @@ export interface ExtractedDocument {
   kind: BookKind;
   /** Paragraphs in reading order, normalized. */
   paragraphs: string[];
+  /**
+   * Parallel array: source page (1-based) per paragraph. Populated for PDFs
+   * (enables figure descriptions attaching to chunk page spans); undefined
+   * for formats without meaningful pages.
+   */
+  paragraphPages?: number[];
   /** Paragraph indices that begin a chapter/part (typography heuristic). */
   chapterStarts: number[];
 }
@@ -40,7 +46,27 @@ export async function extractDocument(filePath: string): Promise<ExtractedDocume
         ? await extractEpubText(filePath)
         : await readFile(filePath, 'utf-8');
 
-  const paragraphs = splitParagraphs(rawText);
+  let paragraphs: string[];
+  let paragraphPages: number[] | undefined;
+  if (kind === 'pdf') {
+    // Per-page extraction: page breaks become paragraph boundaries (fixes
+    // academic layouts) and every paragraph is tagged with its page number
+    // (enables figure descriptions attaching to chunk page spans).
+    const pageTexts = await extractPdfPages(filePath);
+    const allParagraphs: string[] = [];
+    const pages: number[] = [];
+    pageTexts.forEach((pageText, index) => {
+      for (const paragraph of splitParagraphs(pageText)) {
+        allParagraphs.push(paragraph);
+        pages.push(index + 1);
+      }
+    });
+    paragraphs = allParagraphs;
+    paragraphPages = pages;
+  } else {
+    paragraphs = splitParagraphs(rawText);
+  }
+
   if (paragraphs.length === 0) {
     throw new Error(
       `No readable text extracted from '${title}' — the file may be empty or a scanned PDF without a text layer`
@@ -52,7 +78,15 @@ export async function extractDocument(filePath: string): Promise<ExtractedDocume
     .filter(([text]) => /^(chapter|part)\s+([ivxlcdm]+|\d+|\w+)\b/i.test(text.trim()))
     .map(([, index]) => index);
 
-  return { title, kind, paragraphs, chapterStarts };
+  return { title, kind, paragraphs, paragraphPages, chapterStarts };
+}
+
+/** Per-page text extraction for PDFs (unpdf mergePages: false). */
+async function extractPdfPages(filePath: string): Promise<string[]> {
+  const buffer = await readFile(filePath);
+  const pdf = await getDocumentProxy(new Uint8Array(buffer));
+  const { text } = await extractText(pdf, { mergePages: false });
+  return Array.isArray(text) ? text : [text];
 }
 
 async function extractPdfText(filePath: string): Promise<string> {

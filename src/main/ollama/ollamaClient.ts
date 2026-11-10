@@ -33,6 +33,8 @@ export interface GenerateRequest {
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
+  /** Base64-encoded images for vision-language models (Ollama image API). */
+  images?: string[];
 }
 
 export interface ChatRequest {

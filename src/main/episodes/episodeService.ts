@@ -1,4 +1,4 @@
-import { access } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import type {
   DailyFeed,
   EpisodeQuestion,
@@ -10,9 +10,15 @@ import type { BookEpisodesRepo } from '../db/repositories/bookEpisodesRepo';
 import type { ContentPoolRepo } from '../db/repositories/contentPoolRepo';
 import type { ReadingStreaksRepo } from '../db/repositories/readingStreaksRepo';
 import type { AiEngineService } from '../ollama/engine';
-import { chunkParagraphs } from '../ingestion/chunker';
+import type { OllamaClient } from '../ollama/ollamaClient';
+import { chunkParagraphs, chunkPageSpans } from '../ingestion/chunker';
 import { createDistiller } from '../ingestion/distiller';
 import { bookKindForPath, extractDocument } from '../ingestion/extract';
+import {
+  attachFigureDescriptions,
+  describePages,
+  detectVisionModel
+} from '../ingestion/figures';
 import { createEpisodeAgent } from './episodeAgent';
 import { buildFeed, nextEpisodeInFeed } from './feed';
 
@@ -21,6 +27,9 @@ export interface EpisodeServiceDeps {
   bookEpisodes: BookEpisodesRepo;
   contentPool: ContentPoolRepo;
   streaks: ReadingStreaksRepo;
+  /** Raw client for vision-language figure descriptions (optional enrichment). */
+  vlClient?: Pick<OllamaClient, 'chat' | 'listModels'>;
+  figuresDir?: string;
 }
 
 export interface RunEpisodeIngestOptions {
@@ -160,6 +169,36 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
 
       const chunks = chunkParagraphs(document.paragraphs);
       const targets = options.maxEpisodes ? chunks.slice(0, options.maxEpisodes) : chunks;
+      const pageSpans = chunkPageSpans(document.paragraphPages, targets);
+
+      // Figure enrichment (PDF only, same pipeline as Library ingestion):
+      // describe pages inside the episode spans, attach to episode text.
+      const figureDescriptions = new Map<number, string>();
+      if (kind === 'pdf' && deps.figuresDir && deps.vlClient) {
+        try {
+          const pdfData = await readFile(filePath);
+          const vlModel = detectVisionModel(await deps.vlClient.listModels());
+          if (vlModel) {
+            const spanPages = [
+              ...new Set(
+                pageSpans?.flatMap((span) =>
+                  span.fromPage === span.toPage ? [span.fromPage] : [span.fromPage, span.toPage]
+                ) ?? []
+              )
+            ];
+            for (const [page, description] of await describePages(pdfData, spanPages, {
+              figuresDir: deps.figuresDir,
+              bookSlug: `${document.title} (episodes)`,
+              vlModel,
+              client: deps.vlClient
+            })) {
+              figureDescriptions.set(page, description);
+            }
+          }
+        } catch {
+          // Enrichment must never fail episode ingestion.
+        }
+      }
 
       // Nothing is written during the loop: old rows are deleted only once the
       // run has something to replace them with, and content rows must exist
@@ -172,7 +211,12 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
 
       for (const [index, chunk] of targets.entries()) {
         options.onProgress?.({ stage: 'episodes', current: index + 1, total: targets.length });
-        const meta = await agent.ingestEpisodeMeta(chunk);
+        const span = pageSpans?.[index];
+        const enrichedChunk =
+          span && figureDescriptions.size > 0
+            ? attachFigureDescriptions(chunk, figureDescriptions, span.fromPage, span.toPage)
+            : chunk;
+        const meta = await agent.ingestEpisodeMeta(enrichedChunk);
         if (!meta.ok) {
           failures.push({ chunkIndex: index, reason: meta.reason });
           continue;
@@ -180,7 +224,7 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
 
         options.onProgress?.({ stage: 'questions', current: index + 1, total: targets.length });
         let questions: { questionIndex: number; promptText: string; solutionCriteria: string }[] = [];
-        const distilled = await distiller.distill(chunk);
+        const distilled = await distiller.distill(enrichedChunk);
         if (distilled.ok) {
           questions = distilled.questions.map((question) => ({
             questionIndex: question.questionIndex,
@@ -196,7 +240,7 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
           episode: {
             episodeNumber: index + 1,
             episodeTitle: meta.meta.episodeTitle,
-            contentText: chunk,
+            contentText: enrichedChunk,
             isCanonical: options.isCanonical,
             episodeRecap: meta.meta.recap
           }

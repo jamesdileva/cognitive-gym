@@ -1,0 +1,9 @@
+{
+  "quiz_id": "quiz_analogy_02",
+  "kind": "analogy",
+  "title": "Growing Up",
+  "prompt": "Puppy is to dog as kitten is to ___",
+  "options": ["cat", "horse", "bird", "lion"],
+  "answer_index": 0,
+  "explanation": "The relationship is young-to-adult of the same species: a puppy grows into a dog, a kitten grows into a cat. (A lion cub would grow into a lion — different species.)"
+}

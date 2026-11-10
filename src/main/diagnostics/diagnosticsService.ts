@@ -6,6 +6,7 @@ import type {
   DiagnosticsSubmitResult,
   LogicPuzzleView,
   LogicRow,
+  QuizItemView,
   SystemsCaseView
 } from '@shared/diagnostics-types';
 import type { GradeResult } from '@shared/reading-types';
@@ -20,6 +21,7 @@ export interface DiagnosticsServiceDeps {
     coding: { problem_id: string; title: string; language: string; goal: string; code: string; bug_criteria: string }[];
     logic: { puzzle_id: string; title: string; categories: Record<string, string[]>; clues: string[]; solution: Record<string, string>[] }[];
     systems: { case_id: string; title: string; goal: string; log_text: string; diagnosis_criteria: string }[];
+    quizzes: { quiz_id: string; kind: 'analogy' | 'odd-one-out'; title: string; prompt: string; options: string[]; answer_index: number; explanation: string }[];
   };
 }
 
@@ -60,6 +62,12 @@ export function createDiagnosticsService(deps: DiagnosticsServiceDeps) {
     return systemsCase;
   }
 
+  function requireQuiz(id: string) {
+    const quiz = deps.content.quizzes.find((entry) => entry.quiz_id === id);
+    if (!quiz) throw new Error(`Unknown quiz item: ${id}`);
+    return quiz;
+  }
+
   function listFor(kind: DiagnosticsKind): DiagnosticsListItem[] {
     if (kind === 'coding') {
       return deps.content.coding.map((problem) => ({
@@ -75,6 +83,13 @@ export function createDiagnosticsService(deps: DiagnosticsServiceDeps) {
         detail: `${puzzle.clues.length} clues · ${Object.keys(puzzle.categories).join(' / ')}`
       }));
     }
+    if (kind === 'quiz') {
+      return deps.content.quizzes.map((quiz) => ({
+        id: quiz.quiz_id,
+        title: quiz.title,
+        detail: quiz.kind === 'analogy' ? 'Analogy' : 'Odd one out'
+      }));
+    }
     return deps.content.systems.map((systemsCase) => ({
       id: systemsCase.case_id,
       title: systemsCase.title,
@@ -87,7 +102,7 @@ export function createDiagnosticsService(deps: DiagnosticsServiceDeps) {
       return { items: listFor(kind) };
     },
 
-    open(kind: DiagnosticsKind, id: string): { item: CodingProblemView | LogicPuzzleView | SystemsCaseView } {
+    open(kind: DiagnosticsKind, id: string): { item: CodingProblemView | LogicPuzzleView | QuizItemView | SystemsCaseView } {
       if (kind === 'coding') {
         const problem = requireCoding(id);
         return {
@@ -113,6 +128,17 @@ export function createDiagnosticsService(deps: DiagnosticsServiceDeps) {
         };
         return { item: view }; // solution never ships to the renderer
       }
+      if (kind === 'quiz') {
+        const quiz = requireQuiz(id);
+        const view: QuizItemView = {
+          id: quiz.quiz_id,
+          kind: quiz.kind,
+          title: quiz.title,
+          prompt: quiz.prompt,
+          options: quiz.options
+        }; // answer_index and explanation stay main-side until submission
+        return { item: view };
+      }
       const systemsCase = requireSystems(id);
       return {
         item: {
@@ -127,10 +153,13 @@ export function createDiagnosticsService(deps: DiagnosticsServiceDeps) {
     submit(input: {
       kind: DiagnosticsKind;
       id: string;
-      answer: string | LogicRow[];
+      answer: string | LogicRow[] | number;
     }): Promise<DiagnosticsSubmitResult> | DiagnosticsSubmitResult {
       if (input.kind === 'logic') {
         return this.submitLogic(input.id, input.answer as LogicRow[]);
+      }
+      if (input.kind === 'quiz') {
+        return this.submitQuiz(input.id, input.answer as number);
       }
       const wrap = (outcome: GradeResult): DiagnosticsSubmitResult =>
         outcome.ok ? ({ kind: 'graded' as const, ...outcome } as const) : outcome;
@@ -187,6 +216,31 @@ export function createDiagnosticsService(deps: DiagnosticsServiceDeps) {
         note: correct
           ? 'Solved — every deduction holds.'
           : 'Not yet: at least one row contradicts the clues. Ask for a contradiction alert, then re-derive.'
+      };
+    },
+
+    /** Deterministic multiple-choice check (analogies, odd-one-out). */
+    submitQuiz(id: string, selectedIndex: number): DiagnosticsSubmitResult {
+      const quiz = requireQuiz(id);
+      if (
+        typeof selectedIndex !== 'number' ||
+        !Number.isInteger(selectedIndex) ||
+        selectedIndex < 0 ||
+        selectedIndex >= quiz.options.length
+      ) {
+        throw new Error(`Invalid selection for quiz item: ${id}`);
+      }
+
+      // Analogies land in the 'english' bucket, odd-one-out (pattern
+      // recognition) in 'systems' — both within the user_progress CHECK.
+      const moduleType: ModuleType = quiz.kind === 'analogy' ? 'english' : 'systems';
+      const correct = selectedIndex === quiz.answer_index;
+      record(moduleType, quiz.quiz_id, correct);
+      return {
+        kind: 'quiz',
+        correct,
+        note: correct ? 'Correct.' : 'Not this one — see the explanation.',
+        explanation: quiz.explanation
       };
     },
 

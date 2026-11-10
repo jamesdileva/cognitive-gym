@@ -1,0 +1,9 @@
+{
+  "quiz_id": "quiz_odd_02",
+  "kind": "odd-one-out",
+  "title": "Shape Up",
+  "prompt": "Which one does not belong?",
+  "options": ["triangle", "square", "circle", "pentagon"],
+  "answer_index": 2,
+  "explanation": "Triangle, square, and pentagon are polygons made of straight sides; a circle has no straight sides at all."
+}

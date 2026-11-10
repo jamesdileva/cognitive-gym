@@ -1,0 +1,9 @@
+{
+  "quiz_id": "quiz_odd_03",
+  "kind": "odd-one-out",
+  "title": "Solar System",
+  "prompt": "Which one does not belong?",
+  "options": ["Mercury", "Venus", "Moon", "Mars"],
+  "answer_index": 2,
+  "explanation": "Mercury, Venus, and Mars are planets orbiting the Sun; the Moon is a natural satellite orbiting Earth."
+}

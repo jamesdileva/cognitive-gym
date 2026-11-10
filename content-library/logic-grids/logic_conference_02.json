@@ -1,0 +1,20 @@
+{
+  "puzzle_id": "logic_conference_02",
+  "title": "The Conference Talks",
+  "categories": {
+    "Speaker": ["Ana", "Ben", "Cal"],
+    "Topic": ["Robots", "Rockets", "Relativity"],
+    "Badge": ["red", "blue", "green"]
+  },
+  "clues": [
+    "Ana speaks about Rockets.",
+    "Ben's badge is not green.",
+    "The Relativity speaker wears a blue badge.",
+    "Cal does not speak about Robots."
+  ],
+  "solution": [
+    { "Speaker": "Ana", "Topic": "Rockets", "Badge": "green" },
+    { "Speaker": "Ben", "Topic": "Robots", "Badge": "red" },
+    { "Speaker": "Cal", "Topic": "Relativity", "Badge": "blue" }
+  ]
+}

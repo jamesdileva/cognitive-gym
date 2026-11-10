@@ -32,6 +32,7 @@ import type {
   DiagnosticsSubmitResult,
   LogicPuzzleView,
   LogicRow,
+  QuizItemView,
   SystemsCaseView
 } from './diagnostics-types';
 import type { SynthesisReport } from './synthesis-types';
@@ -88,11 +89,11 @@ export interface GymApi {
   diagOpen(request: {
     kind: DiagnosticsKind;
     id: string;
-  }): Promise<{ item: CodingProblemView | LogicPuzzleView | SystemsCaseView }>;
+  }): Promise<{ item: CodingProblemView | LogicPuzzleView | QuizItemView | SystemsCaseView }>;
   diagSubmit(request: {
     kind: DiagnosticsKind;
     id: string;
-    answer: string | LogicRow[];
+    answer: string | LogicRow[] | number;
   }): Promise<DiagnosticsSubmitResult>;
   diagHint(request: {
     kind: DiagnosticsKind;

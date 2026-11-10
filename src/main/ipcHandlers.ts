@@ -32,6 +32,7 @@ import type {
   DiagnosticsSubmitResult,
   LogicPuzzleView,
   LogicRow,
+  QuizItemView,
   SystemsCaseView
 } from '@shared/diagnostics-types';
 import type { SynthesisReport } from '@shared/synthesis-types';
@@ -86,7 +87,7 @@ export interface IpcServices {
   readStart(request: { uuid: string }): { session: ReadingSession };
   readSubmit(request: { uuid: string; questionIndex: number; answer: string }): Promise<GradeResult>;
   diagContent(request: { kind: DiagnosticsKind }): { items: DiagnosticsListItem[] };
-  diagOpen(request: { kind: DiagnosticsKind; id: string }): { item: CodingProblemView | LogicPuzzleView | SystemsCaseView };
+  diagOpen(request: { kind: DiagnosticsKind; id: string }): { item: CodingProblemView | LogicPuzzleView | QuizItemView | SystemsCaseView };
   diagSubmit(request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }): Promise<DiagnosticsSubmitResult> | DiagnosticsSubmitResult;
   diagHint(request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }): Promise<{ ok: true; hint: string } | { ok: false; failure: { kind: string; message: string } }>;
   synthStories(request: { count: number }): Promise<SynthesisReport>;

@@ -1,0 +1,8 @@
+{
+  "problem_id": "coding_mutable_default_02",
+  "title": "The List That Remembers",
+  "language": "python",
+  "goal": "Each call to add_item with no list should build a fresh list — but calls keep sharing one list.",
+  "code": "def add_item(item, items=[]):\n    items.append(item)\n    return items\n\nprint(add_item(\"a\"))  # ['a'] — as expected\nprint(add_item(\"b\"))  # ['a', 'b'] — surprise!",
+  "bug_criteria": "Must identify the mutable default argument: the empty list in the signature is created ONCE at function definition, not per call, so every call appends to the same shared list. The fix is the None-sentinel pattern (default items=None, then items = items if items is not None else [] inside the body) — not deleting the default or copying at call time."
+}

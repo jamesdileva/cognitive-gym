@@ -1,7 +1,8 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } from 'electron';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FileTokenStore } from './ingestion/fileTokens';
+import { resolveFigurePath } from './ingestion/figures';
 import { buildDbStatus } from './db/dbStatus';
 import { openDatabase } from './db/database';
 import { createBookEpisodesRepo } from './db/repositories/bookEpisodesRepo';
@@ -234,6 +235,17 @@ app.whenReady().then(() => {
         emitter.send(IPC_CHANNELS.aiStreamToken, { streamId: request.streamId, token });
       };
       return toAiResult(ollama.generateStream({ ...request, onToken }));
+    },
+    figuresFetch: async (request) => {
+      const resolved = resolveFigurePath(figuresDir, request.relPath);
+      if (!resolved || !existsSync(resolved)) {
+        return { base64: null };
+      }
+      try {
+        return { base64: readFileSync(resolved).toString('base64') };
+      } catch {
+        return { base64: null };
+      }
     },
     dailyToday: () => daily.today(),
     dailyGradeTeaser: (request) => daily.gradeTeaser(request.answer)

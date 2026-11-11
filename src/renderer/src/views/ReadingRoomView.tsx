@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import { useReadingSession } from '../hooks/useReadingSession';
+import { FigureAwareText } from '../components/FigureAwareText';
 import type { QuestionGrade } from '../hooks/useReadingSession';
 
 function scoreStyle(score: number): string {
@@ -54,9 +55,7 @@ export default function ReadingRoomView(): JSX.Element {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <article className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
             <div className="flex flex-col gap-3 text-[15px] leading-relaxed text-zinc-300">
-              {session.text.split('\n\n').map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
+              <FigureAwareText text={session.text} />
             </div>
           </article>
 

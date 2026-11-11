@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { renderPageAsImage } from 'unpdf';
 
 export interface FigureRecord {
@@ -87,21 +87,42 @@ export async function describePages(
 }
 
 /**
- * Appends per-page visual descriptions to a chunk's text, marked as enrichment
- * so the distiller can reference figure information in its questions.
+ * Appends per-page visual descriptions to a chunk's text as a two-line pair:
+ * a human/distiller description plus a machine-readable figure reference the
+ * renderer turns into an image. `relPath` is relative to figuresDir — the
+ * renderer fetches it through the containment-validated figures:fetch IPC.
  */
 export function attachFigureDescriptions(
   chunkText: string,
   descriptions: Map<number, string>,
   fromPage: number,
-  toPage: number
+  toPage: number,
+  relPathFor: (page: number) => string
 ): string {
   const lines: string[] = [];
   for (let page = fromPage; page <= toPage; page += 1) {
     const description = descriptions.get(page);
     if (description) {
       lines.push(`[Visual content from page ${page}: ${description}]`);
+      lines.push(`[figure: ${relPathFor(page)}]`);
     }
   }
   return lines.length > 0 ? `${chunkText}\n\n${lines.join('\n')}` : chunkText;
+}
+
+/**
+ * Resolves a renderer-supplied relative figure path to an absolute path under
+ * figuresDir — or null when the path escapes the directory (traversal) or is
+ * not a PNG. Security boundary for the figures:fetch IPC (AGENTS.md §6).
+ */
+export function resolveFigurePath(figuresDir: string, relPath: string): string | null {
+  if (typeof relPath !== 'string' || relPath.includes('\0') || !relPath.endsWith('.png')) {
+    return null;
+  }
+  const resolved = resolve(figuresDir, relPath);
+  const normalizedDir = resolve(figuresDir);
+  if (!resolved.startsWith(normalizedDir + sep) && resolved !== normalizedDir) {
+    return null;
+  }
+  return resolved;
 }

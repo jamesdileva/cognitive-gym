@@ -78,16 +78,18 @@ describe('attachFigureDescriptions', () => {
       [42, 'A graph of velocity versus time.'],
       [60, 'An unrelated figure.']
     ]);
-    const enriched = attachFigureDescriptions('Body text.', descriptions, 41, 42);
+    const enriched = attachFigureDescriptions('Body text.', descriptions, 41, 42, (page) => `figures/knight/p${page}.png`);
     expect(enriched).toContain('Body text.');
     expect(enriched).toContain('[Visual content from page 41: A free-body diagram of the block.]');
     expect(enriched).toContain('[Visual content from page 42: A graph of velocity versus time.]');
+    expect(enriched).toContain('[figure: figures/knight/p41.png]');
+    expect(enriched).toContain('[figure: figures/knight/p42.png]');
     expect(enriched).not.toContain('unrelated figure');
   });
 
   it('returns the chunk unchanged when no descriptions map to its span', () => {
     const descriptions = new Map<number, string>([[99, 'elsewhere']]);
-    expect(attachFigureDescriptions('Body text.', descriptions, 41, 42)).toBe('Body text.');
+    expect(attachFigureDescriptions('Body text.', descriptions, 41, 42, () => 'x.png')).toBe('Body text.');
   });
 });
 
@@ -159,5 +161,27 @@ describe('describePages', () => {
     });
     // chat throws → graceful skip → empty map
     expect(described.size).toBe(0);
+  });
+});
+
+describe('resolveFigurePath (security containment)', () => {
+  it('resolves normal paths inside figuresDir', async () => {
+    const { resolveFigurePath } = await import('@main/ingestion/figures');
+    const dir = makeTempDir();
+    const resolved = resolveFigurePath(dir, 'figures/knight/p42.png');
+    expect(resolved).toBe(join(dir, 'figures', 'knight', 'p42.png'));
+  });
+
+  it('rejects traversal outside figuresDir', async () => {
+    const { resolveFigurePath } = await import('@main/ingestion/figures');
+    const dir = makeTempDir();
+    expect(resolveFigurePath(dir, '../secrets/key.txt')).toBeNull();
+    expect(resolveFigurePath(dir, 'figures/../../important.doc')).toBeNull();
+  });
+
+  it('rejects non-png files', async () => {
+    const { resolveFigurePath } = await import('@main/ingestion/figures');
+    const dir = makeTempDir();
+    expect(resolveFigurePath(dir, 'figures/knight/p42.exe')).toBeNull();
   });
 });

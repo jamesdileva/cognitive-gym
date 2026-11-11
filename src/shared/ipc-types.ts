@@ -87,7 +87,9 @@ export const IPC_CHANNELS = {
   /** AI: run a streaming generation; tokens arrive as ai:stream-token events. */
   aiStreamGenerate: 'ai:stream-generate',
   /** AI: token events for in-flight streams (main→renderer). */
-  aiStreamToken: 'ai:stream-token'
+  aiStreamToken: 'ai:stream-token',
+  /** Figures: fetch a figure PNG (containment-validated, base64). */
+  figuresFetch: 'figures:fetch'
 } as const;
 
 /** One streamed token, tagged with the stream it belongs to. */

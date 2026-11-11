@@ -119,4 +119,6 @@ export interface GymApi {
   }): Promise<AiResult>;
   /** Subscribes to streamed tokens; returns an unsubscribe fn. */
   onStreamChunk(callback: (event: StreamTokenEvent) => void): () => void;
+  /** Fetches a figure PNG (base64) — only paths inside userData/figures. */
+  figuresFetch(request: { relPath: string }): Promise<{ base64: string | null }>;
 }

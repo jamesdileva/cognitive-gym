@@ -137,7 +137,8 @@ describe('registerIpcHandlers', () => {
         teaser: { id: '', kind: 'riddle', prompt: '', done: true },
         complete: true
       }
-    })
+    }),
+    figuresFetch: async (): Promise<{ base64: string | null }> => ({ base64: null })
   };
 
   const capture = (): Map<string, unknown> => {
@@ -193,7 +194,8 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.drillBest,
       IPC_CHANNELS.dailyToday,
       IPC_CHANNELS.dailyGradeTeaser,
-      IPC_CHANNELS.aiStreamGenerate
+      IPC_CHANNELS.aiStreamGenerate,
+      IPC_CHANNELS.figuresFetch
     ]);
   });
 

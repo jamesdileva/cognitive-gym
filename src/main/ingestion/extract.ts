@@ -67,7 +67,7 @@ export async function extractDocument(filePath: string): Promise<ExtractedDocume
       if (isPasswordError(error)) {
         throw new Error(
           `'${title}' is password-protected — remove the password and try again.`,
-          { cause: error instanceof Error ? error : undefined }
+          { cause: error }
         );
       }
       // Fall back to plain per-page text extraction (also maps password errors).

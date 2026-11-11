@@ -80,7 +80,7 @@ export async function describePages(
       });
       // Square brackets would corrupt the [figure: …] marker pairs the
       // renderer parses — sanitize them out of model output.
-      described.set(page, result.text.trim().replace(/[\[\]]/g, ''));
+      described.set(page, result.text.trim().replace(/[[\]]/g, ''));
     } catch {
       // Figures are enrichment — one bad page never fails ingestion.
     }

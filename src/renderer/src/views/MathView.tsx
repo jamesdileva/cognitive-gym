@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { JSX } from 'react';
+import { renderMathText } from '@shared/math-format';
 import { useMathSession } from '../hooks/useMathSession';
 import type { TranscriptEntry } from '../hooks/useMathSession';
 
@@ -83,7 +84,7 @@ export default function MathView(): JSX.Element {
       </header>
 
       <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-        <p className="text-center font-mono text-2xl text-zinc-100">{problem.display}</p>
+        <p className="text-center font-mono text-2xl text-zinc-100">{renderMathText(problem.display)}</p>
 
         <div className="mt-5 flex gap-2">
           <input
@@ -138,7 +139,7 @@ export default function MathView(): JSX.Element {
 
         {session.revealed && (
           <div className="mt-4 rounded border border-zinc-700 bg-zinc-950 p-4">
-            <p className="font-mono text-sm text-emerald-300">{session.revealed.answer}</p>
+            <p className="font-mono text-sm text-emerald-300">{renderMathText(session.revealed.answer)}</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-zinc-400">
               {session.revealed.steps.map((step, index) => (
                 <li key={index}>{step}</li>

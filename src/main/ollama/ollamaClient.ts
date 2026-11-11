@@ -309,9 +309,13 @@ export class OllamaClient {
       if (timer) clearTimeout(timer);
 
       if (doneLine === null) {
-        throw timedOut
-          ? new OllamaError('timeout', `Ollama stream stalled past its ${idleTimeoutMs}ms idle budget: ${url}`)
-          : new OllamaError('invalid_response', 'Ollama stream ended without a done marker');
+        // Distinguish our idle-timeout abort from an external cancel.
+        if (controller.signal.aborted) {
+          throw timedOut
+            ? new OllamaError('timeout', `Ollama stream stalled past its ${idleTimeoutMs}ms idle budget: ${url}`)
+            : new OllamaError('aborted', 'Ollama stream was cancelled');
+        }
+        throw new OllamaError('invalid_response', 'Ollama stream ended without a done marker');
       }
       return {
         text,

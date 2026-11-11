@@ -17,7 +17,8 @@ import { bookKindForPath, extractDocument } from '../ingestion/extract';
 import {
   attachFigureDescriptions,
   describePages,
-  detectVisionModel
+  detectVisionModel,
+  stripFigureRefs
 } from '../ingestion/figures';
 import { createEpisodeAgent } from './episodeAgent';
 import { buildFeed, nextEpisodeInFeed } from './feed';
@@ -230,7 +231,7 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
 
         options.onProgress?.({ stage: 'questions', current: index + 1, total: targets.length });
         let questions: { questionIndex: number; promptText: string; solutionCriteria: string }[] = [];
-        const distilled = await distiller.distill(enrichedChunk);
+        const distilled = await distiller.distill(stripFigureRefs(enrichedChunk));
         if (distilled.ok) {
           questions = distilled.questions.map((question) => ({
             questionIndex: question.questionIndex,

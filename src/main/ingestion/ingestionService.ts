@@ -10,7 +10,12 @@ import type { OllamaClient } from '../ollama/ollamaClient';
 import { chunkParagraphs, chunkPageSpans } from './chunker';
 import { createDistiller, type DistilledQuestion } from './distiller';
 import { bookKindForPath, extractDocument } from './extract';
-import { describePages, attachFigureDescriptions, detectVisionModel } from './figures';
+import {
+  attachFigureDescriptions,
+  describePages,
+  detectVisionModel,
+  stripFigureRefs
+} from './figures';
 
 export interface IngestionServiceDeps {
   engine: Pick<AiEngineService, 'generateWithEngine'>;
@@ -107,7 +112,7 @@ export function createIngestionService(deps: IngestionServiceDeps) {
                 (page) => `figures/${document.title}/p${page}.png`
               )
             : chunk;
-        const outcome = await distiller.distill(enrichedChunk);
+        const outcome = await distiller.distill(stripFigureRefs(enrichedChunk));
         if (outcome.ok) {
           successes.push({ chunk: enrichedChunk, questions: outcome.questions });
         } else {

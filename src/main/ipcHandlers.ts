@@ -25,6 +25,7 @@ import type {
   ReadingPassageSummary,
   ReadingSession
 } from '@shared/reading-types';
+import type { FollowUpResult } from '@shared/socratic-types';
 import type {
   CodingProblemView,
   DiagnosticsKind,
@@ -87,6 +88,11 @@ export interface IpcServices {
   readPassages(): { passages: ReadingPassageSummary[] };
   readStart(request: { uuid: string }): { session: ReadingSession };
   readSubmit(request: { uuid: string; questionIndex: number; answer: string }): Promise<GradeResult>;
+  readFollowUp(request: {
+    uuid: string;
+    questionIndex: number;
+    message: string;
+  }): Promise<FollowUpResult>;
   diagContent(request: { kind: DiagnosticsKind }): { items: DiagnosticsListItem[] };
   diagOpen(request: { kind: DiagnosticsKind; id: string }): { item: CodingProblemView | LogicPuzzleView | QuizItemView | SystemsCaseView };
   diagSubmit(request: { kind: DiagnosticsKind; id: string; answer: string | LogicRow[] }): Promise<DiagnosticsSubmitResult> | DiagnosticsSubmitResult;
@@ -172,6 +178,11 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
     IPC_CHANNELS.readSubmit,
     (_event, request: { uuid: string; questionIndex: number; answer: string }) =>
       services.readSubmit(request)
+  );
+  ipcMain.handle(
+    IPC_CHANNELS.readFollowUp,
+    (_event, request: { uuid: string; questionIndex: number; message: string }) =>
+      services.readFollowUp(request)
   );
   ipcMain.handle(IPC_CHANNELS.diagContent, (_event, request: { kind: DiagnosticsKind }) =>
     services.diagContent(request)

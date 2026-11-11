@@ -55,6 +55,8 @@ const api: GymApi = {
   readStart: (request: { uuid: string }) => ipcRenderer.invoke(IPC_CHANNELS.readStart, request),
   readSubmit: (request: { uuid: string; questionIndex: number; answer: string }) =>
     ipcRenderer.invoke(IPC_CHANNELS.readSubmit, request),
+  readFollowUp: (request: { uuid: string; questionIndex: number; message: string }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.readFollowUp, request),
   diagContent: (request: { kind: string }) => ipcRenderer.invoke(IPC_CHANNELS.diagContent, request),
   diagOpen: (request: { kind: string; id: string }) =>
     ipcRenderer.invoke(IPC_CHANNELS.diagOpen, request),

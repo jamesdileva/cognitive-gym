@@ -84,6 +84,8 @@ export const IPC_CHANNELS = {
   dailyToday: 'daily:today',
   /** Daily Mix: grade today's teaser answer. */
   dailyGradeTeaser: 'daily:grade-teaser',
+  /** Reading Room: Socratic follow-up grounded in the graded exchange. */
+  readFollowUp: 'read:follow-up',
   /** AI: run a streaming generation; tokens arrive as ai:stream-token events. */
   aiStreamGenerate: 'ai:stream-generate',
   /** AI: token events for in-flight streams (main→renderer). */

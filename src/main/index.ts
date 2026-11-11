@@ -9,6 +9,7 @@ import { createBookEpisodesRepo } from './db/repositories/bookEpisodesRepo';
 import { createContentPoolRepo } from './db/repositories/contentPoolRepo';
 import { createFlashcardsRepo } from './db/repositories/flashcardsRepo';
 import { createReadingStreaksRepo } from './db/repositories/readingStreaksRepo';
+import { createSocraticTurnsRepo } from './db/repositories/socraticTurnsRepo';
 import { createUserProgressRepo } from './db/repositories/userProgressRepo';
 import { seedDevDataIfEmpty } from './db/seedDevData';
 import { createIngestionService } from './ingestion/ingestionService';
@@ -100,10 +101,12 @@ app.whenReady().then(() => {
   const generatedMath = existsSync(generatedMathDir)
     ? loadMathTemplates(generatedMathDir)
     : [];
+  const socraticTurns = createSocraticTurnsRepo(db);
   const math = createMathService({
     templates: mergeMathTemplates(seedMath, generatedMath),
     progress: createUserProgressRepo(db),
-    engine: ai
+    engine: ai,
+    turns: socraticTurns
   });
   const synthesis = createSynthesisService({
     engine: ai,
@@ -137,7 +140,8 @@ app.whenReady().then(() => {
   const reading = createReadingService({
     engine: ai,
     contentPool: createContentPoolRepo(db),
-    progress: createUserProgressRepo(db)
+    progress: createUserProgressRepo(db),
+    turns: socraticTurns
   });
   const diagnostics = createDiagnosticsService({
     engine: ai,
@@ -208,6 +212,7 @@ app.whenReady().then(() => {
     readPassages: () => ({ passages: reading.listPassages() }),
     readStart: (request) => ({ session: reading.startSession(request.uuid) }),
     readSubmit: (request) => reading.submitAnswer(request),
+    readFollowUp: (request) => reading.followUp(request),
     diagContent: (request) => diagnostics.list(request.kind),
     diagOpen: (request) => diagnostics.open(request.kind, request.id),
     diagSubmit: (request) =>

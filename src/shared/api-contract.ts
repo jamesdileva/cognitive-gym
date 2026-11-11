@@ -20,6 +20,7 @@ import type {
   EpisodicIngestReport,
   EpisodicIngestRequest
 } from './episodes-types';
+import type { FollowUpResult } from './socratic-types';
 import type {
   GradeResult,
   ReadingPassageSummary,
@@ -88,6 +89,11 @@ export interface GymApi {
     questionIndex: number;
     answer: string;
   }): Promise<GradeResult>;
+  readFollowUp(request: {
+    uuid: string;
+    questionIndex: number;
+    message: string;
+  }): Promise<FollowUpResult>;
   diagContent(request: { kind: DiagnosticsKind }): Promise<{ items: DiagnosticsListItem[] }>;
   diagOpen(request: {
     kind: DiagnosticsKind;

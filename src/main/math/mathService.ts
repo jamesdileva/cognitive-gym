@@ -156,12 +156,27 @@ export type MathService = ReturnType<typeof createMathService>;
  * "x = 6", "6" and "X=6" all match the canonical "x = 6".
  */
 export function normalizeMathAnswer(answer: string): string {
+  const superscripts: Record<string, string> = {
+    '⁰': '0',
+    '¹': '1',
+    '²': '2',
+    '³': '3',
+    '⁴': '4',
+    '⁵': '5',
+    '⁶': '6',
+    '⁷': '7',
+    '⁸': '8',
+    '⁹': '9',
+    '⁻': '-'
+  };
   let normalized = answer
     .trim()
     .toLowerCase()
     .replace(/[\u2212\u2013\u2014]/g, '-') // minus/en/em dash -> hyphen
     .replace(/[\u00d7\u22c5]/g, '*') // × and · -> *
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]/g, (char) => superscripts[char] ?? char) // pasted superscripts
     .replace(/\s+/g, '')
+    .replace(/\^/g, '') // tolerate caret exponents: x^9 === x9
     .replace(/[{}]/g, ''); // tolerate LaTeX-ish braces: x^{9} === x^9
   const equalsIndex = normalized.indexOf('=');
   if (equalsIndex !== -1) {

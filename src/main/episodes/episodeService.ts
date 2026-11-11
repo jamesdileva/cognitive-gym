@@ -214,7 +214,13 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
         const span = pageSpans?.[index];
         const enrichedChunk =
           span && figureDescriptions.size > 0
-            ? attachFigureDescriptions(chunk, figureDescriptions, span.fromPage, span.toPage)
+            ? attachFigureDescriptions(
+                chunk,
+                figureDescriptions,
+                span.fromPage,
+                span.toPage,
+                (page) => `figures/${document.title} (episodes)/p${page}.png`
+              )
             : chunk;
         const meta = await agent.ingestEpisodeMeta(enrichedChunk);
         if (!meta.ok) {

@@ -99,7 +99,13 @@ export function createIngestionService(deps: IngestionServiceDeps) {
         const span = pageSpans?.[index];
         const enrichedChunk =
           span && figureDescriptions.size > 0
-            ? attachFigureDescriptions(chunk, figureDescriptions, span.fromPage, span.toPage)
+            ? attachFigureDescriptions(
+                chunk,
+                figureDescriptions,
+                span.fromPage,
+                span.toPage,
+                (page) => `figures/${document.title}/p${page}.png`
+              )
             : chunk;
         const outcome = await distiller.distill(enrichedChunk);
         if (outcome.ok) {

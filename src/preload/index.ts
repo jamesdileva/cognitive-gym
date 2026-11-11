@@ -81,7 +81,9 @@ const api: GymApi = {
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.aiStreamToken, listener);
     };
-  }
+  },
+  figuresFetch: (request: { relPath: string }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.figuresFetch, request)
 };
 
 contextBridge.exposeInMainWorld('api', api);

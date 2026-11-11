@@ -103,6 +103,7 @@ export interface IpcServices {
     request: { streamId: string; model: string; prompt: string; system?: string },
     emitter: StreamEmitter
   ): Promise<AiResult>;
+  figuresFetch(request: { relPath: string }): Promise<{ base64: string | null }>;
 }
 
 /** Registers every IPC handler on the real `ipcMain`. Called once at app start. */
@@ -209,5 +210,8 @@ export function registerIpcHandlers(ipcMain: Pick<IpcMain, 'handle'>, services: 
       event: { sender: StreamEmitter },
       request: { streamId: string; model: string; prompt: string; system?: string }
     ) => services.aiStreamGenerate(request, event.sender)
+  );
+  ipcMain.handle(IPC_CHANNELS.figuresFetch, (_event, request: { relPath: string }) =>
+    services.figuresFetch(request)
   );
 }

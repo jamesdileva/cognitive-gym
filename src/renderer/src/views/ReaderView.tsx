@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { JSX } from 'react';
 import type { EpisodicIngestRequest } from '@shared/episodes-types';
 import type { EpisodeSummary } from '@shared/episodes-types';
+import { FigureAwareText } from '../components/FigureAwareText';
 import { useReader } from '../hooks/useReader';
 
 function ProgressBanner({ progress }: { progress: { stage: string; current: number; total: number } }): JSX.Element {
@@ -158,9 +159,7 @@ export default function ReaderView(): JSX.Element {
                   {feed.episode?.episodeTitle}
                 </h2>
                 <div className="flex flex-col gap-3 text-[15px] leading-relaxed text-zinc-300">
-                  {feed.episode?.text.split('\n\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
+                  <FigureAwareText text={feed.episode?.text ?? ''} />
                 </div>
               </article>
               {!feed.revisit && (

@@ -32,7 +32,8 @@ export function useBakeOff(): {
   });
 
   // Streaming chunks arrive via global events; route them by streamId.
-  const [streamIds] = useState<Record<string, BakeOffSideKey>>({});
+  // A ref (not state) — routing is imperative and must not re-render.
+  const streamIds = useRef<Record<string, BakeOffSideKey>>({});
   const buffers = useRef<Record<string, string>>({});
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export function useBakeOff(): {
         }
       }));
     });
-  }, [streamIds.current]);
+  }, []);
 
   const run = useCallback(
     async (

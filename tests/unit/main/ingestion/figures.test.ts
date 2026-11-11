@@ -5,7 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   attachFigureDescriptions,
   describePages,
-  detectVisionModel
+  detectVisionModel,
+  stripFigureRefs
 } from '@main/ingestion/figures';
 
 // The fake PDF bytes can't render — mock the PDF renderer so describePages
@@ -161,6 +162,23 @@ describe('describePages', () => {
     });
     // chat throws → graceful skip → empty map
     expect(described.size).toBe(0);
+  });
+});
+
+describe('stripFigureRefs', () => {
+  it('removes machine-readable figure lines, keeps prose', () => {
+    const text = [
+      'Body paragraph.',
+      '[Visual content from page 4: A chart.]',
+      '[figure: figures/b/p4.png]'
+    ].join('\n');
+    expect(stripFigureRefs(text)).toBe(
+      'Body paragraph.\n[Visual content from page 4: A chart.]'
+    );
+  });
+
+  it('leaves text without figure lines unchanged', () => {
+    expect(stripFigureRefs('plain text')).toBe('plain text');
   });
 });
 

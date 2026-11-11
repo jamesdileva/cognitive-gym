@@ -78,7 +78,9 @@ export async function describePages(
           }
         ]
       });
-      described.set(page, result.text.trim());
+      // Square brackets would corrupt the [figure: …] marker pairs the
+      // renderer parses — sanitize them out of model output.
+      described.set(page, result.text.trim().replace(/[\[\]]/g, ''));
     } catch {
       // Figures are enrichment — one bad page never fails ingestion.
     }
@@ -108,6 +110,17 @@ export function attachFigureDescriptions(
     }
   }
   return lines.length > 0 ? `${chunkText}\n\n${lines.join('\n')}` : chunkText;
+}
+
+/**
+ * Strips machine-readable [figure: …] lines from text before it reaches a
+ * distillation prompt — the path is renderer routing data, not lesson content.
+ */
+export function stripFigureRefs(text: string): string {
+  return text
+    .split('\n')
+    .filter((line) => !/^\[figure: .+\]$/.test(line.trim()))
+    .join('\n');
 }
 
 /**

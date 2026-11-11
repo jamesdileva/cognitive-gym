@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import AdmZip from 'adm-zip';
-import { extractText, getDocumentProxy } from 'unpdf';
+import { extractText, extractTextItems, getDocumentProxy } from 'unpdf';
+import { layoutParagraphs } from './layout';
 import type { BookKind } from '@shared/ingestion-types';
 
 export interface ExtractedDocument {
@@ -39,32 +40,52 @@ export async function extractDocument(filePath: string): Promise<ExtractedDocume
   const kind = bookKindForPath(filePath);
   const title = basename(filePath).replace(/\.[^.]+$/, '');
 
-  const rawText =
-    kind === 'pdf'
-      ? await extractPdfText(filePath)
-      : kind === 'epub'
-        ? await extractEpubText(filePath)
-        : await readFile(filePath, 'utf-8');
-
   let paragraphs: string[];
   let paragraphPages: number[] | undefined;
   if (kind === 'pdf') {
-    // Per-page extraction: page breaks become paragraph boundaries (fixes
-    // academic layouts) and every paragraph is tagged with its page number
-    // (enables figure descriptions attaching to chunk page spans).
-    const pageTexts = await extractPdfPages(filePath);
-    const allParagraphs: string[] = [];
-    const pages: number[] = [];
-    pageTexts.forEach((pageText, index) => {
-      for (const paragraph of splitParagraphs(pageText)) {
-        allParagraphs.push(paragraph);
-        pages.push(index + 1);
+    // Position-aware layout: lines reconstructed from text-item coordinates,
+    // two-column pages split left-then-right (Sprint 17 hardening). Falls
+    // back to plain per-page text when the layout is degenerate. Password
+    // errors always surface — no fallback can help.
+    const readPdf = async (): Promise<Uint8Array> =>
+      new Uint8Array(await readFile(filePath));
+    try {
+      const perPageItems = await extractPdfLayoutItems(await readPdf());
+      if (perPageItems.length === 0) throw new Error('layout produced no text');
+      const allParagraphs: string[] = [];
+      const pages: number[] = [];
+      perPageItems.forEach((pageItems, index) => {
+        for (const paragraph of layoutParagraphs(pageItems)) {
+          allParagraphs.push(paragraph);
+          pages.push(index + 1);
+        }
+      });
+      if (allParagraphs.length === 0) throw new Error('layout produced no text');
+      paragraphs = allParagraphs;
+      paragraphPages = pages;
+    } catch (error) {
+      if (isPasswordError(error)) {
+        throw new Error(
+          `'${title}' is password-protected — remove the password and try again.`
+        );
       }
-    });
-    paragraphs = allParagraphs;
-    paragraphPages = pages;
+      // Fall back to plain per-page text extraction (also maps password errors).
+      const pageTexts = await extractPdfPages(filePath);
+      const allParagraphs: string[] = [];
+      const pages: number[] = [];
+      pageTexts.forEach((pageText, index) => {
+        for (const paragraph of splitParagraphs(pageText)) {
+          allParagraphs.push(paragraph);
+          pages.push(index + 1);
+        }
+      });
+      paragraphs = allParagraphs;
+      paragraphPages = pages;
+    }
   } else {
-    paragraphs = splitParagraphs(rawText);
+    paragraphs = splitParagraphs(
+      kind === 'epub' ? await extractEpubText(filePath) : await readFile(filePath, 'utf-8')
+    );
   }
 
   if (paragraphs.length === 0) {
@@ -81,19 +102,44 @@ export async function extractDocument(filePath: string): Promise<ExtractedDocume
   return { title, kind, paragraphs, paragraphPages, chapterStarts };
 }
 
-/** Per-page text extraction for PDFs (unpdf mergePages: false). */
-async function extractPdfPages(filePath: string): Promise<string[]> {
-  const buffer = await readFile(filePath);
-  const pdf = await getDocumentProxy(new Uint8Array(buffer));
-  const { text } = await extractText(pdf, { mergePages: false });
-  return Array.isArray(text) ? text : [text];
+/** Maps pdf.js errors to clear user-facing messages. */
+function wrapPdfError(error: unknown): Error {
+  const name = (error as { name?: string })?.name;
+  if (name === 'PasswordException') {
+    return new Error('This PDF is password-protected — remove the password and try again.');
+  }
+  return error instanceof Error ? error : new Error(String(error));
 }
 
-async function extractPdfText(filePath: string): Promise<string> {
-  const buffer = await readFile(filePath);
-  const pdf = await getDocumentProxy(new Uint8Array(buffer));
-  const { text } = await extractText(pdf, { mergePages: true });
-  return Array.isArray(text) ? text.join('\n\n') : text;
+function isPasswordError(error: unknown): boolean {
+  return (error as { name?: string })?.name === 'PasswordException';
+}
+
+/** Positioned per-page text items for PDFs (feeds layoutParagraphs). */
+async function extractPdfLayoutItems(
+  pdfData: Uint8Array
+): Promise<{ str: string; x: number; y: number; width: number; height: number }[][]> {
+  try {
+    const pdf = await getDocumentProxy(pdfData);
+    const { items } = await extractTextItems(pdf);
+    return (items as { str: string; x: number; y: number; width: number; height: number }[][]).filter(
+      (pageItems) => Array.isArray(pageItems)
+    );
+  } catch (error) {
+    throw wrapPdfError(error);
+  }
+}
+
+/** Per-page text extraction for PDFs (unpdf mergePages: false). */
+async function extractPdfPages(filePath: string): Promise<string[]> {
+  try {
+    const buffer = await readFile(filePath);
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    const { text } = await extractText(pdf, { mergePages: false });
+    return Array.isArray(text) ? text : [text];
+  } catch (error) {
+    throw wrapPdfError(error);
+  }
 }
 
 /** Best-effort EPUB v2/v3: spine-ordered XHTML documents, paragraph-faithful. */
@@ -114,7 +160,11 @@ async function extractEpubText(filePath: string): Promise<string> {
   }
 
   const spineIds = [...opf.matchAll(/<itemref\s+[^>]*?idref="([^"]+)"/g)].map((m) => m[1]);
-  const hrefs = spineIds.map((id) => manifest.get(id)).filter((href): href is string => Boolean(href));
+  // Strip #fragments — spine hrefs may point at anchors within a file.
+  const hrefs = spineIds
+    .map((id) => manifest.get(id))
+    .filter((href): href is string => Boolean(href))
+    .map((href) => href.split('#')[0]);
 
   const paragraphs: string[] = [];
   for (const href of hrefs) {

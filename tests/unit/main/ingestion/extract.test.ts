@@ -151,6 +151,28 @@ describe('extractDocument — EPUB (synthetic, built in-test)', () => {
     });
   });
 
+  it('resolves spine hrefs with #fragments', () => {
+    const dir = makeTempDir();
+    const path = join(dir, 'fragments.epub');
+    const zip = new AdmZip();
+    zip.addFile('mimetype', Buffer.from('application/epub+zip'));
+    zip.addFile(
+      'META-INF/container.xml',
+      Buffer.from('<container><rootfiles><rootfile full-path="content.opf"/></rootfiles></container>')
+    );
+    zip.addFile(
+      'content.opf',
+      Buffer.from('<package xmlns="http://www.idpf.org/2007/opf" version="2.0"><manifest><item id="c1" href="c.xhtml" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="c1"/></spine></package>')
+    );
+    zip.addFile('c.xhtml', Buffer.from('<html><body><p>Fragment target text.</p></body></html>'));
+    zip.writeZip(path);
+
+    // href with a fragment: 'c.xhtml#intro' must resolve to 'c.xhtml'
+    return extractDocument(path).then((doc) => {
+      expect(doc.paragraphs).toContain('Fragment target text.');
+    });
+  });
+
   it('decodes HTML entities inside paragraphs', () => {
     const dir = makeTempDir();
     const path = join(dir, 'entities.epub');

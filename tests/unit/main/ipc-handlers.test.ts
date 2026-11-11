@@ -16,6 +16,7 @@ import type {
   EpisodicIngestRequest
 } from '@shared/episodes-types';
 import type { GradeResult, ReadingPassageSummary, ReadingSession } from '@shared/reading-types';
+import type { FollowUpResult } from '@shared/socratic-types';
 import type { SynthesisReport } from '@shared/synthesis-types';
 import type { DrillStats } from '@shared/drill-types';
 import type { DailyTeaserGrade } from '@shared/daily-types';
@@ -52,7 +53,7 @@ describe('registerIpcHandlers', () => {
   };
 
   const noopServices: IpcServices = {
-    dbStatus: () => ({ migrationVersion: 5, tableCounts: {}, totalRows: 0 }),
+    dbStatus: () => ({ migrationVersion: 6, tableCounts: {}, totalRows: 0 }),
     aiStatus: async () => ({ engine: 'qwen2.5:7b', models: [], ollamaAvailable: false }),
     aiSetEngine: async (model: string) => ({ engine: model }),
     aiGenerate: async (_request: AiGenerateRequest): Promise<AiResult> => ({
@@ -138,6 +139,7 @@ describe('registerIpcHandlers', () => {
         complete: true
       }
     }),
+    readFollowUp: async (): Promise<FollowUpResult> => ({ ok: true, reply: '' }),
     figuresFetch: async (): Promise<{ base64: string | null }> => ({ base64: null })
   };
 
@@ -183,6 +185,7 @@ describe('registerIpcHandlers', () => {
       IPC_CHANNELS.readPassages,
       IPC_CHANNELS.readStart,
       IPC_CHANNELS.readSubmit,
+      IPC_CHANNELS.readFollowUp,
       IPC_CHANNELS.diagContent,
       IPC_CHANNELS.diagOpen,
       IPC_CHANNELS.diagSubmit,
@@ -222,7 +225,7 @@ describe('registerIpcHandlers', () => {
 
     const dbStatusHandler = handlers.get(IPC_CHANNELS.dbStatus) as () => unknown;
     expect(dbStatusHandler()).toEqual({
-      migrationVersion: 5,
+      migrationVersion: 6,
       tableCounts: {
         flashcards: 1,
         user_progress: 0,

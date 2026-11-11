@@ -28,6 +28,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 15 | Streaming AI Responses | v0.3 (user request) | ✅ Done |
 | 16 | Figure/Image UI | v0.3 (user request) | ⬜ Not started |
 | 17 | EPUB/PDF Hardening | v0.3 (user request) | ✅ Done |
+| 18 | Socratic Dialogue Memory | v0.3 (user request) | ✅ Done |
 
 ---
 

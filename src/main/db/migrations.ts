@@ -137,5 +137,21 @@ export const MIGRATIONS: Migration[] = [
       );
       CREATE INDEX idx_speed_runs_created ON speed_runs (created_at);
     `
+  },
+  {
+    version: 6,
+    name: 'socratic-dialogue-memory',
+    up: `
+      CREATE TABLE socratic_turns (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        attempt_key TEXT NOT NULL,
+        turn_index INTEGER NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('tutor', 'student')),
+        content TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL,
+        UNIQUE (attempt_key, turn_index)
+      );
+      CREATE INDEX idx_socratic_turns_key ON socratic_turns (attempt_key, turn_index);
+    `
   }
 ];

@@ -10,6 +10,7 @@ import type {
 import type { AiFailure } from '@shared/ai-types';
 import type { AiEngineService } from '../ollama/engine';
 import type { UserProgressRepo } from '../db/repositories/userProgressRepo';
+import type { SocraticTurnsRepo } from '../db/repositories/socraticTurnsRepo';
 import { resolveVariableSpec, seededRandom } from './specEngine';
 import type { MathTemplate } from './templateSchema';
 
@@ -24,6 +25,8 @@ export interface MathServiceDeps {
   templates: MathTemplate[];
   progress: Pick<UserProgressRepo, 'recordAttempt' | 'getByItem'>;
   engine: Pick<AiEngineService, 'generateWithEngine'>;
+  /** Dialogue memory for Socratic hints (optional — no repo, no memory). */
+  turns?: Pick<SocraticTurnsRepo, 'append' | 'list'>;
 }
 
 /**
@@ -105,20 +108,31 @@ export function createMathService(deps: MathServiceDeps) {
     },
 
     /**
-     * Socratic hint: renders the registry's socratic-math prompt with the
-     * computed problem and its structural steps, bound to the live engine.
+     * Socratic hint with dialogue memory: renders the registry's socratic-math
+     * prompt, includes the stored prior exchange for THIS problem instance,
+     * and stores the new exchange after generating.
      */
     async hint(problem: MathProblem, userMessage: string): Promise<MathHintResult> {
       const rendered = render(problem.templateId, problem.seed);
+      const attemptKey = `math:${problem.templateId}#${problem.seed}`;
+      const priorTurns = deps.turns?.list(attemptKey) ?? [];
+      const dialogueBlock =
+        priorTurns.length > 0
+          ? 'PRIOR DIALOGUE ON THIS PROBLEM (oldest first):\n' +
+            priorTurns.map((turn) => `${turn.role === 'tutor' ? 'Tutor' : 'Student'}: ${turn.content}`).join('\n') +
+            '\n\nTake the prior dialogue into account — do not repeat earlier hints.\n\n'
+          : '';
       const system = renderPrompt('socratic-math', {
         computed_problem: rendered.problem.display,
         solution_steps: rendered.solutionSteps.map((step, index) => `${index + 1}. ${step}`).join('\n')
       });
       try {
         const generation = await deps.engine.generateWithEngine({
-          prompt: userMessage,
+          prompt: dialogueBlock + userMessage,
           system
         });
+        deps.turns?.append(attemptKey, 'student', userMessage);
+        deps.turns?.append(attemptKey, 'tutor', generation.text);
         return { ok: true, hint: generation.text };
       } catch (error) {
         const failure: AiFailure = {

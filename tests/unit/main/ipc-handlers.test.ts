@@ -76,6 +76,7 @@ describe('registerIpcHandlers', () => {
       chunkCount: 0,
       ingestedCount: 0,
       questionCount: 0,
+      skippedFrontMatter: 0,
       failures: []
     }),
     ingestLibrary: () => ({ sources: [] as IngestedSourceSummary[] }),
@@ -86,6 +87,7 @@ describe('registerIpcHandlers', () => {
       chunkCount: 0,
       ingestedCount: 0,
       questionCount: 0,
+      skippedFrontMatter: 0,
       failures: []
     }),
     epTracks: () => ({ tracks: [] as EpisodeTrack[] }),

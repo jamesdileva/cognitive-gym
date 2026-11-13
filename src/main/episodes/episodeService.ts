@@ -14,6 +14,7 @@ import type { OllamaClient } from '../ollama/ollamaClient';
 import { chunkParagraphs, chunkPageSpans } from '../ingestion/chunker';
 import { createDistiller } from '../ingestion/distiller';
 import { bookKindForPath, extractDocument } from '../ingestion/extract';
+import { isLikelyFrontMatter } from '../ingestion/frontMatter';
 import {
   attachFigureDescriptions,
   describePages,
@@ -169,7 +170,10 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
       const document = await extractDocument(filePath);
 
       const chunks = chunkParagraphs(document.paragraphs);
-      const targets = options.maxEpisodes ? chunks.slice(0, options.maxEpisodes) : chunks;
+      // Front matter never makes good episodes — skip boilerplate chunks.
+      const contentChunks = chunks.filter((chunk) => !isLikelyFrontMatter(chunk));
+      const skippedFrontMatter = chunks.length - contentChunks.length;
+      const targets = options.maxEpisodes ? contentChunks.slice(0, options.maxEpisodes) : contentChunks;
       const pageSpans = chunkPageSpans(document.paragraphPages, targets);
 
       // Figure enrichment (PDF only, same pipeline as Library ingestion):
@@ -282,6 +286,7 @@ export function createEpisodeService(deps: EpisodeServiceDeps) {
         chunkCount: chunks.length,
         ingestedCount: written.length,
         questionCount: questionTotal,
+        skippedFrontMatter,
         failures
       };
     }

@@ -58,5 +58,7 @@ export interface EpisodicIngestReport {
   ingestedCount: number;
   /** Questions stored via the distiller across those episodes. */
   questionCount: number;
+  /** Chunks skipped as publisher front matter. */
+  skippedFrontMatter: number;
   failures: IngestionFailure[];
 }

@@ -12,6 +12,9 @@ release/
 # Test artifacts
 coverage/
 
+# Other local tools that write into this workspace (not part of the project)
+runs/
+
 # Local databases (ingested book content lives here, never in the repo)
 *.sqlite
 *.sqlite3

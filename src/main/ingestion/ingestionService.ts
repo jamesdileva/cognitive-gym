@@ -8,6 +8,7 @@ import type { ContentPoolRepo, SourceType } from '../db/repositories/contentPool
 import type { AiEngineService } from '../ollama/engine';
 import type { OllamaClient } from '../ollama/ollamaClient';
 import { chunkParagraphs, chunkPageSpans } from './chunker';
+import { isLikelyFrontMatter } from './frontMatter';
 import { createDistiller, type DistilledQuestion } from './distiller';
 import { bookKindForPath, extractDocument } from './extract';
 import {
@@ -67,7 +68,14 @@ export function createIngestionService(deps: IngestionServiceDeps) {
       const document = await extractDocument(filePath);
 
       const chunks = chunkParagraphs(document.paragraphs);
-      const targets = options.maxChunks ? chunks.slice(0, options.maxChunks) : chunks;
+      // Front matter (copyright/ISBN/publisher pages) never makes good
+      // lessons — skip those chunks before distillation (user report:
+      // Knight Physics ingested its copyright page as chunk 1).
+      const contentChunks = chunks.filter((chunk) => !isLikelyFrontMatter(chunk));
+      const skippedFrontMatter = chunks.length - contentChunks.length;
+      const targets = options.maxChunks
+        ? contentChunks.slice(0, options.maxChunks)
+        : contentChunks;
       const pageSpans = chunkPageSpans(document.paragraphPages, targets);
 
       // Figure enrichment (PDF only): render + VL-describe pages inside the
@@ -146,6 +154,7 @@ export function createIngestionService(deps: IngestionServiceDeps) {
         chunkCount: chunks.length,
         ingestedCount: successes.length,
         questionCount,
+        skippedFrontMatter,
         failures
       };
     }

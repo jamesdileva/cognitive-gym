@@ -22,6 +22,8 @@ export interface IngestionReport {
   ingestedCount: number;
   /** Comprehension questions stored across all ingested chunks. */
   questionCount: number;
+  /** Chunks skipped as publisher front matter (copyright/ISBN pages). */
+  skippedFrontMatter: number;
   failures: IngestionFailure[];
 }
 

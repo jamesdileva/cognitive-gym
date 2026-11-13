@@ -26,7 +26,7 @@ Delivery plan turning `docs/architecture.md`, `docs/blueprint.md`, and `docs/boo
 | 13 | Content & Ingestion Quality Pass | v0.2 (user request) | ✅ Done |
 | 14 | Diagram-Aware Ingestion | v0.2→v0.3 (user request) | ✅ Done |
 | 15 | Streaming AI Responses | v0.3 (user request) | ✅ Done |
-| 16 | Figure/Image UI | v0.3 (user request) | ⬜ Not started |
+| 16 | Figure/Image UI | v0.3 (user request) | ✅ Done |
 | 17 | EPUB/PDF Hardening | v0.3 (user request) | ✅ Done |
 | 18 | Socratic Dialogue Memory | v0.3 (user request) | ✅ Done |
 
@@ -208,3 +208,8 @@ Session pause/resume, multiple user profiles, EPUB ingestion hardening, Socratic
 - **Sprint 17 — EPUB/PDF Hardening:** two-column layout detection for academic PDFs, encrypted-PDF errors, EPUB spine robustness.
 
 **Deferred (recorded):** Socratic tree visualization — needs per-turn dialogue storage, branch-aware tutoring, and streaming as prerequisites; revisit after v0.3.
+
+## Post-v0.3 maintenance (2026-11-13) ✅
+
+- **Front-matter skip:** publisher boilerplate (copyright / ISBN / revenue / permissions pages) is now detected (`frontMatter.ts`: 3+ distinct markers at 2+/100 words) and skipped by both the Library and episodic pipelines; `skippedFrontMatter` added to ingestion reports. Triggered by Knight Physics ingesting its copyright page as lesson content.
+- **v0.3.0 release:** packaged app rebuilt (`Cognitive Gym Setup 0.3.0.exe`) so win-unpacked includes everything through Sprint 18 + math formatting; version bumped 0.1.2 → 0.3.0, tagged `v0.3.0`.

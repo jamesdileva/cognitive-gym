@@ -13,6 +13,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['tests/**/*.test.{ts,tsx}']
+    include: ['tests/**/*.test.{ts,tsx}'],
+    // tests/tmp-*.test.ts = manual real-DB fixtures (local only, never committed)
+    exclude: ['**/node_modules/**', 'tests/tmp-*.test.ts']
   }
 });

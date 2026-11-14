@@ -211,5 +211,7 @@ Session pause/resume, multiple user profiles, EPUB ingestion hardening, Socratic
 
 ## Post-v0.3 maintenance (2026-11-13) ✅
 
-- **Front-matter skip:** publisher boilerplate (copyright / ISBN / revenue / permissions pages) is now detected (`frontMatter.ts`: 3+ distinct markers at 2+/100 words) and skipped by both the Library and episodic pipelines; `skippedFrontMatter` added to ingestion reports. Triggered by Knight Physics ingesting its copyright page as lesson content.
+- **Front-matter skip:** publisher boilerplate (copyright / ISBN / revenue / permissions / "reprinted by permission" pages) is detected (`frontMatter.ts`) and skipped by both the Library and episodic pipelines; `skippedFrontMatter` added to ingestion reports. Triggered by Knight Physics ingesting its copyright page as lesson content. Detection evolved twice against real stored chunks: per-word density mathematically cannot fire on 1000+-word blocks (title/copyright pages), so scoring is fraction-of-boilerplate-sentences (junk 0.26–0.59, narrative ≤0.07) with 3+ distinct markers.
+- **Real-library cleanup:** Knight Physics, The Hot Zone, and Wolves of the Calla re-ingested into the local DB — copyright/title/acknowledgments chunks replaced with real content (physics problems, narrative, dedictions).
+- **Engine setting:** the user's Ollama no longer serves the `qwen2.5:7b` default tag, so ingestion 404'd until the engine setting was pointed at the installed `qwen2.5:7b-instruct` tag (user-switchable in the UI as before).
 - **v0.3.0 release:** packaged app rebuilt (`Cognitive Gym Setup 0.3.0.exe`) so win-unpacked includes everything through Sprint 18 + math formatting; version bumped 0.1.2 → 0.3.0, tagged `v0.3.0`.

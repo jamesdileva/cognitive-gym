@@ -22,6 +22,7 @@ const BOILERPLATE_PATTERNS: RegExp[] = [
   /library of congress/i,
   /reproduction or transmission/i,
   /permissions? (?:department|contact|request)/i,
+  /reprinted by permission/i,
   /revenue/i,
   /www\.|https?:\/\//i,
   /\bedition\b/i

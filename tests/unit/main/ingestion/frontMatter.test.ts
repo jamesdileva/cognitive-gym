@@ -50,6 +50,21 @@ describe('isLikelyFrontMatter', () => {
     expect(isLikelyFrontMatter(block)).toBe(true);
   });
 
+  it('flags a credits/acknowledgments page of reprinted permissions', () => {
+    // Regression: The Hot Zone's acknowledgments page — mostly attribution
+    // lines ("Reprinted by permission."), few other markers.
+    const credit = 'GRATEFUL ACKNOWLEDGMENT IS MADE TO THE FOLLOWING FOR ' +
+      'PERMISSION TO USE BOTH PUBLISHED AND UNPUBLISHED MATERIAL: ' +
+      'DAN W. DALGARD: Brief excerpts from “Chronology of Events”. ' +
+      'Copyright © 1989, 1994 by Dan W. Dalgard. Reprinted by permission. ' +
+      'KARL M. JOHNSON: Excerpt from a letter to the author. ' +
+      'Reprinted by permission. THE WASHINGTON POST: Excerpt from a news ' +
+      'story by D’Vera Cohn (12/1/89). Copyright © 1989 by The Washington ' +
+      'Post. Reprinted by permission. Portions of this work were originally ' +
+      'published in The New Yorker.';
+    expect(isLikelyFrontMatter(credit)).toBe(true);
+  });
+
   it('does not flag real lesson content', () => {
     const lesson =
       'When a net external force acts on a body, the body accelerates in the ' +

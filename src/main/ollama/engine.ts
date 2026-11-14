@@ -4,7 +4,15 @@ import { createAppSettingsRepo } from '../db/repositories/appSettingsRepo';
 import type { OllamaClient, GenerateRequest } from './ollamaClient';
 
 export const ENGINE_SETTING_KEY = 'ollama.engine';
-export const DEFAULT_ENGINE = 'qwen2.5:7b';
+
+/**
+ * The tag Ollama's registry actually serves for Qwen2.5 7B chat. The bare
+ * "qwen2.5:7b" was never a real tag on this kind of install — a phantom
+ * default caused silent 404s on every generation call once app_settings was
+ * empty. Same family and size as the docs' "Qwen 2.5 7B"; still
+ * user-switchable via the engine setting.
+ */
+export const DEFAULT_ENGINE = 'qwen2.5:7b-instruct';
 
 /**
  * Live engine switching (architecture.md §7): the selected model is persisted

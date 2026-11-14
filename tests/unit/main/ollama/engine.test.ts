@@ -30,7 +30,7 @@ describe('createAiEngineService', () => {
   it('defaults to the documented engine when nothing is persisted', () => {
     const service = createAiEngineService(db, fakeClient());
     expect(service.getEngine()).toBe(DEFAULT_ENGINE);
-    expect(DEFAULT_ENGINE).toBe('qwen2.5:7b');
+    expect(DEFAULT_ENGINE).toBe('qwen2.5:7b-instruct');
   });
 
   it('persists engine switches in app_settings (survives service recreation)', () => {
@@ -51,7 +51,7 @@ describe('createAiEngineService', () => {
   it('status reports availability and installed models', async () => {
     const service = createAiEngineService(db, fakeClient({ listModels: async () => ['m1'] }));
     await expect(service.status()).resolves.toEqual({
-      engine: 'qwen2.5:7b',
+      engine: 'qwen2.5:7b-instruct',
       models: ['m1'],
       ollamaAvailable: true
     });
@@ -62,7 +62,7 @@ describe('createAiEngineService', () => {
       throw new Error('ECONNREFUSED');
     } }));
     await expect(service.status()).resolves.toEqual({
-      engine: 'qwen2.5:7b',
+      engine: 'qwen2.5:7b-instruct',
       models: [],
       ollamaAvailable: false
     });

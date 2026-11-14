@@ -64,12 +64,14 @@ export function frontMatterScore(text: string): FrontMatterScore {
 
 /**
  * True when the chunk reads like a publisher block: several distinct
- * boilerplate markers and a quarter of its sentences carrying them. Real
+ * boilerplate markers and a fifth of its sentences carrying them. Real
  * content mentions at most one or two markers incidentally (probe: ≤0.07
- * fraction); author notes and prefaces are prose and correctly stay.
+ * fraction); the marginal publisher pages (credits/acknowledgments) score
+ * ≥0.226, so the gate sits between the bands. Author notes and prefaces
+ * are prose and correctly stay.
  */
 export function isLikelyFrontMatter(text: string): boolean {
   const score = frontMatterScore(text);
   if (score.sentences < 4) return false;
-  return score.distinct >= 3 && score.markerSentences / score.sentences >= 0.25;
+  return score.distinct >= 3 && score.markerSentences / score.sentences >= 0.2;
 }
